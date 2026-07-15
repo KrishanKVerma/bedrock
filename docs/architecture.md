@@ -13,21 +13,25 @@ The second one is the point.
 
 ---
 
-## The agent looptask
-│
-▼
+## The agent loop
+
+```
+task
+ │
+ ▼
 PERCEIVE ──► page state (DOM + screenshot → structured, LLM-readable)
-│
-▼
+ │
+ ▼
 PLAN ──────► next action (LLM reads state, picks click/type/navigate)
-│
-▼
+ │
+ ▼
 ACT ───────► execute via Playwright
-│
-▼
+ │
+ ▼
 VERIFY ────► did the page actually change the way the plan expected?
-│
-└──► loop until task complete or budget exhausted
+ │
+ └──► loop until task complete or budget exhausted
+```
 
 **VERIFY is the non-standard step.** Most agents act and assume. Bedrock checks its own work at every step — that's the difference between "I clicked" and "the thing I wanted to happen happened."
 
@@ -35,27 +39,27 @@ VERIFY ────► did the page actually change the way the plan expected?
 
 ## The harness
             ┌──────────────────────────┐
-            │  task + expected outcome  │
+            │  task + expected outcome │
             └────────────┬─────────────┘
                          │
           ┌──────────────▼──────────────┐
-          │  INJECT failure conditions   │
-          │  (drift · modals · ...)      │
+          │  INJECT failure conditions  │
+          │  (drift · modals · ...)     │
           └──────────────┬──────────────┘
                          │
                 ┌────────▼────────┐
-                │   AGENT LOOP     │
+                │   AGENT LOOP    │
                 └────────┬────────┘
                          │
           ┌──────────────▼──────────────┐
-          │  SILENT-FAILURE DETECTOR     │
-          │  agent's claim vs page truth │
+          │  SILENT-FAILURE DETECTOR    │
+          │  agent's claim vs page truth│
           └──────────────┬──────────────┘
                          │
                replayable run log
                          │
                 ┌────────▼────────┐
-                │  PASS / FAIL     │
+                │  PASS / FAIL    │
                 └─────────────────┘
 
 ### Silent-failure detection
