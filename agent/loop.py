@@ -42,6 +42,7 @@ class RunReport:
     outcome: str = "incomplete"
     claim: str = ""
     final_url: str = ""
+    final_text: str = ""
 
     def describe(self) -> str:
         lines = [
@@ -91,5 +92,9 @@ def run(task: str, start_url: str, max_steps: int = 8, headless: bool = False) -
             report.claim = f"stopped after {max_steps} steps"
 
         report.final_url = session.page.url
+        try:
+            report.final_text = " ".join(session.page.inner_text("body").split())
+        except Exception:  # noqa: BLE001
+            report.final_text = ""
 
     return report
