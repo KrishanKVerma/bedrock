@@ -96,16 +96,17 @@ TASKS: list[Task] = [
         expect=Expectation(url_contains="Alan_Turing", text_contains="computer scientist"),
     ),
     Task(
-        id="httpbin_form",
+        id="quotes_search_form",
         kind="form_fill",
         instruction=(
-            "Fill the form: set custname to 'Bedrock Agent', set custtel to '5550100', "
-            "then submit the order."
+            "Search the site for quotes tagged 'humor' by using the tag link, "
+            "then confirm humor quotes are shown."
         ),
-        start_url="https://httpbin.org/forms/post",
-        expect=Expectation(text_contains="Bedrock Agent"),
-        max_steps=10,
+        start_url="https://quotes.toscrape.com",
+        expect=Expectation(url_contains="tag/humor"),
+        max_steps=8,
     ),
+    
     Task(
         id="quotes_login_form",
         kind="form_fill",

@@ -17,9 +17,9 @@
       ],
       "non_deterministic": false,
       "run_ids": [
-        "run_1687d370",
-        "run_cf4ff95f",
-        "run_7bc1f23b"
+        "run_a0729dbc",
+        "run_e4344c73",
+        "run_c1ee5dba"
       ]
     },
     {
@@ -36,9 +36,9 @@
       ],
       "non_deterministic": false,
       "run_ids": [
-        "run_8c6a1143",
-        "run_7542f0fc",
-        "run_48774a2c"
+        "run_52832d6c",
+        "run_cca74e80",
+        "run_46924538"
       ]
     },
     {
@@ -51,13 +51,13 @@
       "verdicts": [
         "pass",
         "budget_exhausted",
-        "budget_exhausted"
+        "planner_error"
       ],
       "non_deterministic": true,
       "run_ids": [
-        "run_779d9326",
-        "run_3d4629da",
-        "run_fd3cb3c9"
+        "run_e332737d",
+        "run_a192194b",
+        "run_5f4deee0"
       ]
     },
     {
@@ -74,28 +74,28 @@
       ],
       "non_deterministic": false,
       "run_ids": [
-        "run_5338bb48",
-        "run_24d9ed85",
-        "run_1830615a"
+        "run_0b7c5ad4",
+        "run_0efd206f",
+        "run_8e52ec0d"
       ]
     },
     {
-      "task_id": "quotes_login_form",
+      "task_id": "quotes_search_form",
       "runs": 3,
-      "passed": 1,
-      "silent_failures": 2,
+      "passed": 3,
+      "silent_failures": 0,
       "honest_failures": 0,
       "errors": 0,
       "verdicts": [
-        "silent_failure",
         "pass",
-        "silent_failure"
+        "pass",
+        "pass"
       ],
-      "non_deterministic": true,
+      "non_deterministic": false,
       "run_ids": [
-        "run_dc781546",
-        "run_56805a7d",
-        "run_3939ec23"
+        "run_bf31c773",
+        "run_4fa54094",
+        "run_f9ffa990"
       ]
     }
   ]

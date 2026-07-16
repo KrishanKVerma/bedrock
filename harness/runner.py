@@ -29,7 +29,17 @@ def run_task(task: Task, headless: bool = False, save: bool = True) -> RunLog:
     history: list[str] = []
 
     with BrowserSession(headless=headless) as session:
-        session.goto(task.start_url)
+        try:
+            session.goto(task.start_url)
+        except Exception as exc:  # noqa: BLE001 — an unreachable site is not an agent failure
+            log.agent_outcome = "site_unreachable"
+            log.agent_claim = f"{type(exc).__name__}: could not load {task.start_url}"
+            log.expectation_met = False
+            log.expectation_reason = "start URL did not load"
+            log.finish()
+            if save:
+                log.save()
+            return log
 
         for n in range(1, task.max_steps + 1):
             state = perceive(session.page)
