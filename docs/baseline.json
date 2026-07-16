@@ -1,0 +1,102 @@
+{
+  "runs_per_task": 3,
+  "tasks": 5,
+  "total_runs": 15,
+  "results": [
+    {
+      "task_id": "hn_top_comments",
+      "runs": 3,
+      "passed": 3,
+      "silent_failures": 0,
+      "honest_failures": 0,
+      "errors": 0,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "non_deterministic": false,
+      "run_ids": [
+        "run_1687d370",
+        "run_cf4ff95f",
+        "run_7bc1f23b"
+      ]
+    },
+    {
+      "task_id": "hn_newest",
+      "runs": 3,
+      "passed": 3,
+      "silent_failures": 0,
+      "honest_failures": 0,
+      "errors": 0,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "non_deterministic": false,
+      "run_ids": [
+        "run_8c6a1143",
+        "run_7542f0fc",
+        "run_48774a2c"
+      ]
+    },
+    {
+      "task_id": "wiki_search",
+      "runs": 3,
+      "passed": 1,
+      "silent_failures": 0,
+      "honest_failures": 0,
+      "errors": 2,
+      "verdicts": [
+        "pass",
+        "budget_exhausted",
+        "budget_exhausted"
+      ],
+      "non_deterministic": true,
+      "run_ids": [
+        "run_779d9326",
+        "run_3d4629da",
+        "run_fd3cb3c9"
+      ]
+    },
+    {
+      "task_id": "httpbin_form",
+      "runs": 3,
+      "passed": 0,
+      "silent_failures": 0,
+      "honest_failures": 3,
+      "errors": 0,
+      "verdicts": [
+        "honest_failure",
+        "honest_failure",
+        "honest_failure"
+      ],
+      "non_deterministic": false,
+      "run_ids": [
+        "run_5338bb48",
+        "run_24d9ed85",
+        "run_1830615a"
+      ]
+    },
+    {
+      "task_id": "quotes_login_form",
+      "runs": 3,
+      "passed": 1,
+      "silent_failures": 2,
+      "honest_failures": 0,
+      "errors": 0,
+      "verdicts": [
+        "silent_failure",
+        "pass",
+        "silent_failure"
+      ],
+      "non_deterministic": true,
+      "run_ids": [
+        "run_dc781546",
+        "run_56805a7d",
+        "run_3939ec23"
+      ]
+    }
+  ]
+}
