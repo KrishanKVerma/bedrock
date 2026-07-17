@@ -17,9 +17,9 @@
       ],
       "non_deterministic": false,
       "run_ids": [
-        "run_a0729dbc",
-        "run_e4344c73",
-        "run_c1ee5dba"
+        "run_498330d3",
+        "run_a796985a",
+        "run_7b2c9c7b"
       ]
     },
     {
@@ -36,47 +36,28 @@
       ],
       "non_deterministic": false,
       "run_ids": [
-        "run_52832d6c",
-        "run_cca74e80",
-        "run_46924538"
+        "run_1311f738",
+        "run_c569a488",
+        "run_ee04fa5e"
       ]
     },
     {
       "task_id": "wiki_search",
       "runs": 3,
-      "passed": 1,
+      "passed": 3,
       "silent_failures": 0,
       "honest_failures": 0,
-      "errors": 2,
-      "verdicts": [
-        "pass",
-        "budget_exhausted",
-        "planner_error"
-      ],
-      "non_deterministic": true,
-      "run_ids": [
-        "run_e332737d",
-        "run_a192194b",
-        "run_5f4deee0"
-      ]
-    },
-    {
-      "task_id": "httpbin_form",
-      "runs": 3,
-      "passed": 0,
-      "silent_failures": 0,
-      "honest_failures": 3,
       "errors": 0,
       "verdicts": [
-        "honest_failure",
-        "honest_failure",
-        "honest_failure"
+        "pass",
+        "pass",
+        "pass"
       ],
       "non_deterministic": false,
       "run_ids": [
-        "run_0b7c5ad4",
-        "run_0efd206f",
-        "run_8e52ec0d"
+        "run_8831a26e",
+        "run_5457b6e8",
+        "run_5cb521f7"
       ]
     },
     {
@@ -93,9 +74,28 @@
       ],
       "non_deterministic": false,
       "run_ids": [
-        "run_bf31c773",
-        "run_4fa54094",
-        "run_f9ffa990"
+        "run_9a2ec68a",
+        "run_91335516",
+        "run_32d648e1"
+      ]
+    },
+    {
+      "task_id": "quotes_login_form",
+      "runs": 3,
+      "passed": 3,
+      "silent_failures": 0,
+      "honest_failures": 0,
+      "errors": 0,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "non_deterministic": false,
+      "run_ids": [
+        "run_8680ec62",
+        "run_60fa1b2b",
+        "run_b24e27cd"
       ]
     }
   ]
