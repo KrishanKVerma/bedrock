@@ -16,15 +16,22 @@ from agent.perceive import perceive
 from agent.plan import PlannerError, plan
 from harness.runlog import RunLog, StepTrace
 from tasks.registry import Task
+from harness.inject import NO_INJECTION, Injection
+from agent import plan as plan_module
 
-
-def run_task(task: Task, headless: bool = False, save: bool = True) -> RunLog:
+def run_task(
+    task: Task,
+    headless: bool = False,
+    save: bool = True,
+    injection: Injection = NO_INJECTION,
+) -> RunLog:
     """Run one task under observation. Returns the full log."""
     log = RunLog(
         task_id=task.id,
         instruction=task.instruction,
         start_url=task.start_url,
         expectation=task.expect.describe(),
+        injected=injection.describe(),
     )
     history: list[str] = []
 
@@ -42,6 +49,13 @@ def run_task(task: Task, headless: bool = False, save: bool = True) -> RunLog:
             return log
 
         for n in range(1, task.max_steps + 1):
+            if injection.kind != "none" and n == injection.at_step:
+                try:
+                    detail = injection.apply(session.page)
+                    history.append(f"[harness injected {injection.kind}: {detail}]")
+                except Exception as exc:  # noqa: BLE001 — injection failure must not fake an agent failure
+                    history.append(f"[injection failed: {exc}]")
+
             state = perceive(session.page)
 
             try:
@@ -80,6 +94,7 @@ def run_task(task: Task, headless: bool = False, save: bool = True) -> RunLog:
             log.agent_claim = f"stopped after {task.max_steps} steps"
 
         # Judge against the page, not against the agent's opinion of itself.
+        log.provider = plan_module.last_provider
         log.final_url = session.page.url
         try:
             page_text = " ".join(session.page.inner_text("body").split())

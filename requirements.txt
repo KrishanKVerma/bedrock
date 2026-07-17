@@ -1,3 +1,3 @@
 playwright
-groq
+google-genai
 python-dotenv

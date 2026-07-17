@@ -6,6 +6,11 @@ The planner is deliberately constrained: it returns one structured decision, not
 prose. Free-form output is how agents become unreliable — the parser breaks, or
 worse, it half-works and the agent does something nobody intended. A fixed schema
 means a bad plan fails loudly instead of quietly.
+
+Provider policy: Groq primary, OpenRouter fallback, both serving the SAME model
+(Llama 3.3 70B). A reliability study cannot afford two brains — runs served by
+different models would blend two agents into one number. Which provider served each
+call is recorded so any result can be checked for provider mixing.
 """
 
 from __future__ import annotations
@@ -16,13 +21,18 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from dotenv import load_dotenv
-from groq import Groq
+from groq import APIStatusError, Groq, RateLimitError
+from openai import OpenAI
 
 from agent.perceive import PageState
 
 load_dotenv()
 
-_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "llama-3.3-70b-versatile"
+OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct"
+
+# Which provider served the most recent call. Recorded into run logs.
+last_provider: str = "none"
 
 ActionType = Literal["click", "type", "navigate", "done", "fail"]
 
@@ -69,13 +79,6 @@ class PlannerError(RuntimeError):
     """The planner returned something we can't act on."""
 
 
-def _client() -> Groq:
-    key = os.getenv("GROQ_API_KEY")
-    if not key:
-        raise RuntimeError("GROQ_API_KEY not set. Add it to .env (see .env.example).")
-    return Groq(api_key=key)
-
-
 def _parse(raw: str) -> Action:
     """Parse the model's JSON. Fail loudly — a malformed plan is a real signal."""
     cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
@@ -105,12 +108,40 @@ def _parse(raw: str) -> Action:
     )
 
 
+def _ask_groq(user: str) -> str:
+    key = os.getenv("GROQ_API_KEY")
+    if not key:
+        raise RuntimeError("GROQ_API_KEY not set.")
+    r = Groq(api_key=key).chat.completions.create(
+        model=GROQ_MODEL,
+        temperature=0,
+        messages=[{"role": "system", "content": _SYSTEM}, {"role": "user", "content": user}],
+    )
+    return r.choices[0].message.content or ""
+
+
+def _ask_openrouter(user: str) -> str:
+    key = os.getenv("OPENROUTER_API_KEY")
+    if not key:
+        raise RuntimeError("Groq is rate-limited and OPENROUTER_API_KEY is not set.")
+    client = OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
+    r = client.chat.completions.create(
+        model=OPENROUTER_MODEL,
+        temperature=0,
+        messages=[{"role": "system", "content": _SYSTEM}, {"role": "user", "content": user}],
+    )
+    return r.choices[0].message.content or ""
+
+
 def plan(task: str, state: PageState, history: list[str] | None = None) -> Action:
     """Decide the next action for `task` given the current page.
 
-    temperature=0 — a planner that gives different answers to the same page is
-    a planner you cannot debug.
+    temperature=0 — a planner that gives different answers to the same page is a
+    planner you cannot debug. (Note: 0 reduces variance; it does not eliminate it.
+    Non-determinism at temperature 0 is itself a finding this project records.)
     """
+    global last_provider
+
     past = "\n".join(f"- {h}" for h in (history or [])) or "(nothing yet)"
     user = (
         f"TASK: {task}\n\n"
@@ -118,12 +149,11 @@ def plan(task: str, state: PageState, history: list[str] | None = None) -> Actio
         f"CURRENT PAGE:\n{state.to_prompt()}"
     )
 
-    response = _client().chat.completions.create(
-        model=_MODEL,
-        temperature=0,
-        messages=[
-            {"role": "system", "content": _SYSTEM},
-            {"role": "user", "content": user},
-        ],
-    )
-    return _parse(response.choices[0].message.content or "")
+    try:
+        raw = _ask_groq(user)
+        last_provider = "groq"
+    except (RateLimitError, APIStatusError):
+        raw = _ask_openrouter(user)
+        last_provider = "openrouter"
+
+    return _parse(raw)
