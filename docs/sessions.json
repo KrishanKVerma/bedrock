@@ -1,0 +1,12 @@
+[
+  {
+    "session_tag": "day10",
+    "timestamp": "2026-07-18T18:50:49.950079+00:00",
+    "condition": "no_injection",
+    "provider": "groq",
+    "element_config": 30,
+    "runs": 10,
+    "silent_failures": 3,
+    "rate": 0.3
+  }
+]
