@@ -30,6 +30,7 @@ load_dotenv()
 
 GROQ_MODEL = "llama-3.3-70b-versatile"
 OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct"
+CEREBRAS_MODEL = "gpt-oss-120b"
 
 # Which provider served the most recent call. Recorded into run logs.
 last_provider: str = "none"
@@ -132,6 +133,17 @@ def _ask_openrouter(user: str) -> str:
     )
     return r.choices[0].message.content or ""
 
+def _ask_cerebras(user: str) -> str:
+    key = os.getenv("CEREBRAS_API_KEY")
+    if not key:
+        raise RuntimeError("CEREBRAS_API_KEY not set.")
+    client = OpenAI(api_key=key, base_url="https://api.cerebras.ai/v1")
+    r = client.chat.completions.create(
+        model=CEREBRAS_MODEL,
+        temperature=0,
+        messages=[{"role": "system", "content": _SYSTEM}, {"role": "user", "content": user}],
+    )
+    return r.choices[0].message.content or ""
 
 def plan(task: str, state: PageState, history: list[str] | None = None) -> Action:
     """Decide the next action for `task` given the current page.
@@ -157,6 +169,9 @@ def plan(task: str, state: PageState, history: list[str] | None = None) -> Actio
     elif locked == "openrouter":
         raw = _ask_openrouter(user)
         last_provider = "openrouter"
+    elif locked == "cerebras":
+        raw = _ask_cerebras(user)
+        last_provider = "cerebras"    
     else:
         try:
             raw = _ask_groq(user)
