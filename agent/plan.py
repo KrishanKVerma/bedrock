@@ -136,7 +136,7 @@ def _ask_openrouter(user: str) -> str:
 def plan(task: str, state: PageState, history: list[str] | None = None) -> Action:
     """Decide the next action for `task` given the current page.
 
-    temperature=0 — a planner that gives different answers to the same page is a
+    temperature=0 - a planner that gives different answers to the same page is a
     planner you cannot debug. (Note: 0 reduces variance; it does not eliminate it.
     Non-determinism at temperature 0 is itself a finding this project records.)
     """
@@ -149,11 +149,20 @@ def plan(task: str, state: PageState, history: list[str] | None = None) -> Actio
         f"CURRENT PAGE:\n{state.to_prompt()}"
     )
 
-    try:
+    locked = os.getenv("BEDROCK_PROVIDER", "").lower()
+
+    if locked == "groq":
         raw = _ask_groq(user)
         last_provider = "groq"
-    except (RateLimitError, APIStatusError):
+    elif locked == "openrouter":
         raw = _ask_openrouter(user)
         last_provider = "openrouter"
+    else:
+        try:
+            raw = _ask_groq(user)
+            last_provider = "groq"
+        except (RateLimitError, APIStatusError):
+            raw = _ask_openrouter(user)
+            last_provider = "openrouter"
 
     return _parse(raw)
