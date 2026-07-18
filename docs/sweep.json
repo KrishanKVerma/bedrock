@@ -1,0 +1,102 @@
+{
+  "task": "quotes_login_form",
+  "runs_per_condition": 10,
+  "conditions": {
+    "no_injection": {
+      "runs": 10,
+      "silent_failures": 3,
+      "passed": 7,
+      "honest_failures": 0,
+      "other": 0,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "silent_failure",
+        "silent_failure",
+        "pass",
+        "silent_failure",
+        "pass",
+        "pass"
+      ],
+      "providers": [
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq"
+      ],
+      "provider_mixed": false
+    },
+    "dom_drift": {
+      "runs": 10,
+      "silent_failures": 9,
+      "passed": 1,
+      "honest_failures": 0,
+      "other": 0,
+      "verdicts": [
+        "silent_failure",
+        "silent_failure",
+        "silent_failure",
+        "silent_failure",
+        "silent_failure",
+        "silent_failure",
+        "silent_failure",
+        "silent_failure",
+        "silent_failure",
+        "pass"
+      ],
+      "providers": [
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "groq",
+        "openrouter",
+        "openrouter",
+        "openrouter"
+      ],
+      "provider_mixed": true
+    },
+    "index_shift": {
+      "runs": 10,
+      "silent_failures": 0,
+      "passed": 10,
+      "honest_failures": 0,
+      "other": 0,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "providers": [
+        "openrouter",
+        "openrouter",
+        "openrouter",
+        "openrouter",
+        "openrouter",
+        "openrouter",
+        "openrouter",
+        "openrouter",
+        "openrouter",
+        "openrouter"
+      ],
+      "provider_mixed": false
+    }
+  }
+}
