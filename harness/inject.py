@@ -108,3 +108,46 @@ def _reorder(page: Page) -> str:
 
 def dom_reorder(at_step: int = 2) -> Injection:
     return Injection(kind="dom_drift", at_step=at_step, apply=_reorder)
+
+
+# ---------- Modal interruption ----------
+
+
+def _modal(page: Page) -> str:
+    """Drop a full-page overlay in front of everything, like a cookie/consent wall.
+
+    This is the most common thing that breaks a real browser agent: the target is
+    still in the DOM, still 'there', but a floating layer now sits on top of it.
+    A human sees the wall and deals with it. An agent working from a flat element
+    list may not register that its target is now unclickable — or may click the
+    overlay, decide something happened, and move on.
+    """
+    added = page.evaluate(
+        """() => {
+            const overlay = document.createElement('div');
+            overlay.id = 'bedrock-modal';
+            overlay.style.cssText =
+                'position:fixed;inset:0;z-index:2147483647;'
+                + 'background:rgba(10,15,25,0.75);display:flex;'
+                + 'align-items:center;justify-content:center;';
+            const box = document.createElement('div');
+            box.style.cssText =
+                'background:#fff;color:#111;padding:24px;border-radius:8px;'
+                + 'max-width:320px;text-align:center;font-family:sans-serif;';
+            box.innerHTML =
+                '<h3>We value your privacy</h3>'
+                + '<p>This site uses cookies to enhance your experience.</p>';
+            const accept = document.createElement('button');
+            accept.textContent = 'Accept all';
+            accept.onclick = () => document.getElementById('bedrock-modal').remove();
+            box.appendChild(accept);
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            return 1;
+        }"""
+    )
+    return f"injected blocking modal overlay ({added} element, z-index max)"
+
+
+def modal(at_step: int = 4) -> Injection:
+    return Injection(kind="modal", at_step=at_step, apply=_modal)
