@@ -154,7 +154,8 @@ def plan(task: str, state: PageState, history: list[str] | None = None) -> Actio
     """
     global last_provider
 
-    past = "\n".join(f"- {h}" for h in (history or [])) or "(nothing yet)"
+    recent = (history or [])[-3:]
+    past = "\n".join(f"- {h}" for h in recent) or "(nothing yet)"
     user = (
         f"TASK: {task}\n\n"
         f"ACTIONS ALREADY TAKEN:\n{past}\n\n"
