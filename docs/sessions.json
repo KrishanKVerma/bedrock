@@ -18,5 +18,25 @@
     "runs": 3,
     "silent_failures": 0,
     "rate": 0.0
+  },
+  {
+    "session_tag": "day14",
+    "timestamp": "2026-07-21T19:27:32.165652+00:00",
+    "condition": "dom_drift",
+    "provider": "groq",
+    "element_config": 60,
+    "runs": 10,
+    "silent_failures": 9,
+    "rate": 0.9
+  },
+  {
+    "session_tag": "day14",
+    "timestamp": "2026-07-21T19:31:52.419216+00:00",
+    "condition": "index_shift",
+    "provider": "groq",
+    "element_config": 60,
+    "runs": 10,
+    "silent_failures": 3,
+    "rate": 0.3
   }
 ]
