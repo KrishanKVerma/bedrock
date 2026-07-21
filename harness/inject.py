@@ -23,18 +23,35 @@ InjectionKind = Literal["none", "dom_drift", "modal"]
 
 @dataclass(frozen=True, slots=True)
 class Injection:
-    """One way to break the page mid-run."""
+    """One way to break the page mid-run.
+
+    Trigger is by page state, not step number. Injecting "at step N" misfires when
+    the agent finishes before N — the injection never happens and the run looks
+    clean for the wrong reason. Firing when the page enters a target state (e.g. the
+    post-login page appears) puts the disruption exactly where it matters,
+    regardless of how many steps the agent took to get there.
+    """
 
     kind: InjectionKind
-    at_step: int  # inject before this step number (1-indexed)
-    apply: Callable[[Page], str]  # returns a description of what it did
+    apply: Callable[[Page], str]
+    fire_when_url_contains: str | None = None  # fire once the page URL contains this
+    at_step: int = 0  # fallback: fire before this step (0 = never by step)
+
+    def should_fire(self, url: str, step: int, already_fired: bool) -> bool:
+        if already_fired or self.kind == "none":
+            return False
+        if self.fire_when_url_contains is not None:
+            return self.fire_when_url_contains in url
+        if self.at_step > 0:
+            return step == self.at_step
+        return False
 
     def describe(self) -> str:
+        if self.fire_when_url_contains:
+            return f"{self.kind} when url~{self.fire_when_url_contains!r}"
         return f"{self.kind} at step {self.at_step}"
 
-
-NO_INJECTION = Injection(kind="none", at_step=0, apply=lambda p: "none")
-
+NO_INJECTION = Injection(kind="none", apply=lambda p: "none")
 
 # ---------- DOM selector drift ----------
 
@@ -73,9 +90,8 @@ def _drift(page: Page) -> str:
     return f"renamed class/id/data-test on {changed} attributes"
 
 
-def dom_drift(at_step: int = 2) -> Injection:
-    return Injection(kind="dom_drift", at_step=at_step, apply=_drift)
-
+def dom_drift(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
+    return Injection(kind="dom_drift", apply=_drift, fire_when_url_contains=fire_when_url_contains)
 
 # ---------- Reorder: the harder version of drift ----------
 
@@ -106,9 +122,8 @@ def _reorder(page: Page) -> str:
     return f"inserted {n} decoy links at top of DOM (all refs shift by {n})"
 
 
-def dom_reorder(at_step: int = 2) -> Injection:
-    return Injection(kind="dom_drift", at_step=at_step, apply=_reorder)
-
+def dom_reorder(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
+    return Injection(kind="dom_drift", apply=_reorder, fire_when_url_contains=fire_when_url_contains)
 
 # ---------- Modal interruption ----------
 
@@ -149,5 +164,5 @@ def _modal(page: Page) -> str:
     return f"injected blocking modal overlay ({added} element, z-index max)"
 
 
-def modal(at_step: int = 4) -> Injection:
-    return Injection(kind="modal", at_step=at_step, apply=_modal)
+def modal(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
+    return Injection(kind="modal", apply=_modal, fire_when_url_contains=fire_when_url_contains)

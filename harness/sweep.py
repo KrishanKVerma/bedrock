@@ -22,9 +22,9 @@ from tasks.registry import get
 
 CONDITIONS = {
     "no_injection": NO_INJECTION,
-    "dom_drift": dom_drift(at_step=4),
-    "index_shift": dom_reorder(at_step=4),
-    "modal": modal(at_step=4),
+    "dom_drift": dom_drift(),
+    "index_shift": dom_reorder(),
+    "modal": modal(),
 }
 
 

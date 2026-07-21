@@ -1,0 +1,22 @@
+[
+  {
+    "session_tag": "day13",
+    "timestamp": "2026-07-21T10:00:23.728269+00:00",
+    "condition": "no_injection",
+    "provider": "groq",
+    "element_config": 60,
+    "runs": 10,
+    "silent_failures": 6,
+    "rate": 0.6
+  },
+  {
+    "session_tag": "day13",
+    "timestamp": "2026-07-21T10:20:07.622416+00:00",
+    "condition": "modal",
+    "provider": "groq",
+    "element_config": 60,
+    "runs": 3,
+    "silent_failures": 0,
+    "rate": 0.0
+  }
+]
