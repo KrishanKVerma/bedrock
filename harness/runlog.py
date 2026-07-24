@@ -66,15 +66,26 @@ class RunLog:
 
     # the verdict that matters
     silent_failure: bool = False
+    inverse_failure: bool = False  
     elapsed: float = 0.0
 
     def add(self, step: StepTrace) -> None:
         self.steps.append(step)
 
     def finish(self) -> None:
-        """Compute the verdict. Silent failure = claimed success, reality disagrees."""
+        """Compute the verdicts.
+
+        Two ways the self-report can be wrong, and both matter:
+          silent_failure  — claimed success, task failed (the dangerous one)
+          inverse_failure — claimed failure, task actually succeeded
+
+        Tracking only the first would suggest the agent is merely optimistic. It
+        isn't: the report is unreliable in both directions, which means the failure
+        is not bias but absence of grounding.
+        """
         self.elapsed = round(time.time() - self.started_at, 2)
         self.silent_failure = self.agent_outcome == "done" and not self.expectation_met
+        self.inverse_failure = self.agent_outcome == "fail" and self.expectation_met
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
