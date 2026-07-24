@@ -64,4 +64,5 @@ def sweep_condition(condition: str, runs: int, task_id: str = "quotes_login_form
 if __name__ == "__main__":
     cond = sys.argv[1] if len(sys.argv) > 1 else "no_injection"
     n = int(sys.argv[2]) if len(sys.argv) > 2 else 10
-    sweep_condition(cond, n)
+    task_id = sys.argv[3] if len(sys.argv) > 3 else "quotes_login_form"
+    sweep_condition(cond, n, task_id)

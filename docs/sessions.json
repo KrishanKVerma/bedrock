@@ -58,5 +58,15 @@
     "runs": 10,
     "silent_failures": 5,
     "rate": 0.5
+  },
+  {
+    "session_tag": "day18",
+    "timestamp": "2026-07-24T18:04:43.926721+00:00",
+    "condition": "no_injection",
+    "provider": "groq",
+    "element_config": 60,
+    "runs": 10,
+    "silent_failures": 4,
+    "rate": 0.4
   }
 ]

@@ -115,6 +115,14 @@ TASKS: list[Task] = [
         expect=Expectation(text_contains="Logout"),
         max_steps=8,
     ),
+    Task(
+        id="add_element_analog",
+        kind="form_fill",
+        instruction="Click the 'Add Element' button to add one element to the page.",
+        start_url="https://the-internet.herokuapp.com/add_remove_elements/",
+        expect=Expectation(text_contains="Delete"),
+        max_steps=8,
+    ),
 ]
 
 BY_ID = {t.id: t for t in TASKS}
