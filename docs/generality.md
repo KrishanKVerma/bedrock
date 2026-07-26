@@ -1,4 +1,4 @@
-# Generality test — does the silent-failure mechanism reproduce?
+# Generality test - does the silent-failure mechanism reproduce?
 
 The login-task silent failure was hypothesized to follow from a structure:
 the element proving success is also the element that undoes it. To test whether
@@ -7,28 +7,54 @@ at locked config (Groq, Llama-3.3-70B, 60 elements, n=10).
 
 | Task | Site | Structure | Silent failures |
 |---|---|---|---|
-| quotes_login_form | quotes.toscrape.com | multi-step; post-login page transition; Logout at low ref | ~40–60% (4 sessions) |
+| quotes_login_form | quotes.toscrape.com | multi-step; post-login transition; Logout at low ref; accepts any credentials | ~40-60% (4 sessions) |
 | add_element_analog | the-internet.herokuapp.com | single click; no transition; Delete appears in place | **0/10** |
+| herokuapp_login_analog | the-internet.herokuapp.com | multi-step; post-login transition to secure area; Logout on new page; validates credentials | **0/10** |
 
 ## Reading
 
-The mechanism did **not** reproduce on the analog. The two tasks share the
-surface structure (success evidence = undo control) but differ in a way that now
-looks essential: the login task is multi-step and success triggers a **page
-transition**, after which the agent re-perceives and can misfire onto the
-evidence-destroying element at a tempting ref. The add-element task completes in a
-single action with no transition — the agent clicks, sees success, and stops. There
-is no second decision point at which to undo itself.
+Two structural analogs were built to reproduce the login silent failure. Both
+returned zero.
 
-## Revised claim
+The first analog (add_element) was too simple - a single click, no page transition -
+so its negative result only ruled out the simplest structure. The second analog
+(herokuapp_login) was designed to match the original closely: multi-step, a page
+transition to a secure area after success, and a Logout control on the new page at a
+reachable ref. It also returned 0/10.
 
-Silent failure here is not a general property of "reachable evidence-destroying
-elements." It requires a more specific structure: a **multi-step task where success
-triggers a page transition, after which the evidence-destroying element appears at a
-low ref and the agent takes one more action instead of stopping.**
+Two negatives on two different structures mean the silent failure is **not** explained
+by the structural story we proposed ("multi-step task + post-success transition +
+evidence-destroying element at a low ref"). Something specific to the
+`quotes_login_form` task is producing it, and our structural hypotheses do not
+capture what.
 
-One positive (login) and one negative (add-element) cannot support a general claim.
-Establishing that the login result is not a one-off requires at least one more
-*positive* reproduction on a different site. Until then the finding is: a specific,
-reproducible task structure induces silent failure — not that agents silently fail
-in general.
+## Candidate differences (unresolved)
+
+- **Credential validation.** quotes.toscrape.com accepts any credentials (a scraping
+  sandbox); herokuapp validates them. The quotes "login" is trivially permissive,
+  which may change agent behaviour.
+- **Exact element layout.** On the quotes post-login page the Logout link sits at a
+  very low ref in a short element list. This points back to the earlier
+  perception-config finding - that the failure is driven by the *index position* of
+  the evidence-destroying element - rather than task structure. The herokuapp page
+  may simply place its Logout control where the agent is less likely to select it.
+
+## Revised claim (smaller, and honest)
+
+We have a **single reproducible instance** of silent failure - `quotes_login_form` -
+that we have not reproduced on any other task despite two purpose-built analogs.
+
+The finding is therefore not "browser agents silently fail" and not "here is a general
+mechanism." It is narrower, and the narrowness is itself the point:
+
+> Silent failure was reliably reproducible on one specific task and did not transfer
+> to two deliberately similar tasks. Whatever causes it is contingent on details we
+> have not yet isolated - most likely the exact element layout of one page, not a
+> structural property of the task. Failures this contingent are hard to predict and
+> hard to test for, which is precisely why an independent post-hoc check - rather than
+> anticipating the failure mode in advance - is the oversight approach that caught it.
+
+Establishing anything more general requires isolating which specific factor
+(credential permissiveness, element layout/ref position, page-transition timing)
+drives the quotes result - by varying them one at a time - before any mechanism can be
+claimed.
