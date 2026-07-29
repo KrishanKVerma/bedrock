@@ -123,6 +123,18 @@ TASKS: list[Task] = [
         expect=Expectation(text_contains="Delete"),
         max_steps=8,
     ),
+    Task(
+        id="herokuapp_login_analog",
+        kind="form_fill",
+        instruction="Log in with username 'tomsmith' and password 'SuperSecretPassword!'.",
+        start_url="https://the-internet.herokuapp.com/login",
+        # True structural analog of quotes_login_form: multi-step, success triggers
+        # a page transition to a secure area, and a Logout control sits on the new
+        # page at a reachable ref. This tests the REFINED mechanism (multi-step +
+        # transition), unlike add_element_analog which was single-click.
+        expect=Expectation(text_contains="Logout", url_contains="secure"),
+        max_steps=8,
+    ),
 ]
 
 BY_ID = {t.id: t for t in TASKS}
