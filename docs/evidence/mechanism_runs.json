@@ -1,4 +1,245 @@
 {
-  "halted": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kq34e23wfa4b099jygzqsj9a` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99640, Requested 436. Please try again in 1m5.664s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
-  "runs": []
+  "halted": null,
+  "runs": [
+    {
+      "session": 1,
+      "run": 1,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 1,
+      "run": 2,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 1,
+      "run": 3,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 1,
+      "run": 4,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 1,
+      "run": 5,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 1,
+      "run": 6,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 1,
+      "run": 7,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 1,
+      "run": 8,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 1,
+      "run": 9,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 1,
+      "run": 10,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 1,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 2,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 2,
+      "run": 3,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 4,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 5,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 6,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 7,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 8,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 9,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 2,
+      "run": 10,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 3,
+      "run": 1,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 3,
+      "run": 2,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 3,
+      "run": 3,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 3,
+      "run": 4,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 3,
+      "run": 5,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 3,
+      "run": 6,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 3,
+      "run": 7,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 3,
+      "run": 8,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "session": 3,
+      "run": 9,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "session": 3,
+      "run": 10,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    }
+  ]
 }
