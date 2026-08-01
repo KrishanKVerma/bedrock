@@ -11,7 +11,7 @@ trusts the agent can catch it. Only an independent check against real state can.
 
 All rates below are from single-provider (Groq, Llama-3.3-70B), single-config
 (1500-char page text, 60 elements) runs. Rates are non-deterministic across
-sessions and are reported as ranges with denominators, never averaged.
+sessions and are reported with denominators, never averaged.
 
 ---
 
@@ -34,9 +34,22 @@ result.
 **Does the agent's report reveal it?** **No.** The agent reports success. This is
 the core case: the self-report and reality point in opposite directions.
 
-**Rate.** Non-deterministic across sessions: observed 30%-50% (no injection, 60
-elements) so far, with earlier unlocked observations as high as 80%. Not a stable
-percentage - a moving target. See `docs/sessions.json`.
+**Rate.** 17/53 runs (32%) at locked config (Groq Llama-3.3-70B, 1500 chars, 60
+elements, max_steps=8), pooled across 6 sessions from one measurement script.
+Per-session: 4/10, 4/10, 3/13, 4/10, 1/10, 5/10. The 1/10 session shows the spread is
+wider than the 40-60% previously documented; that earlier band came from 4 sessions
+and now reads as a high draw rather than the centre. Earlier unlocked observations
+(up to 80%) are excluded as perception-config artifacts - see the measurement-artifact
+section below. See `docs/evidence/mechanism_runs.json`.
+
+**Mechanism (verified by prediction, N=17).** Every silent failure took one step
+beyond the terminal action: the page already showed "Logout" at the start of the final
+step, and the agent clicked ref[1] (Logout), undoing its own success. 17/17. Passing
+runs stop *on* the terminal action, click[4]=Login - 0/36 showed the success state
+before their final step, though that contrast is partly definitional, since a pass by
+construction ends at the step that creates success. The failure is a **stop-condition
+failure**, not a capability failure: the agent can do the task and does, then fails to
+recognise it is done. Scope unchanged - one task, one model.
 
 ---
 
@@ -81,8 +94,9 @@ same config, same session where possible.
 
 **Does the agent's report reveal it?** **No.** Under clean single-provider runs,
 injected drift produced 10/10 silent failures - worse than the no-injection baseline
-(30-50%). The agent did not report confusion; it reported success. Drift did not
-announce itself.
+(32%, 17/53). The agent did not report confusion; it reported success. Drift did not
+announce itself. Note the asymmetric denominators: the drift figure is a single
+session (n=10) against a 53-run baseline, and has not been repeated.
 
 **Note.** An earlier provider-mixed run suggested drift might *reduce* silent failure
 by shifting the evidence-destroying element out of reach. That result did not survive
@@ -97,9 +111,9 @@ class/id drift.
 **What it is.** The same agent, same task, same configuration produces different
 outcomes across runs and - more strongly - across sessions.
 
-**How it manifests.** The login task's silent-failure rate has been measured at 30%,
-50%, and (unlocked) ~80% and ~33% in different sessions. Same code, same model, same
-config. Temperature is 0; this variance is not from sampling temperature.
+**How it manifests.** At locked config, per-session silent-failure counts across six
+sessions were 4/10, 4/10, 3/13, 4/10, 1/10, 5/10 - a spread from 10% to 40% around a
+pooled 32%. Temperature is 0; this variance is not from sampling temperature.
 
 **How it's detected.** Multi-run sweeps, repeated across sessions, with denominators
 kept visible. A single run - or a single session - cannot reveal it.
@@ -110,7 +124,8 @@ confident outcome. The instability is only visible in aggregate, across many run
 **Why it matters most.** If a reliability number swings this much on nothing, then any
 benchmark reporting a single figure is reporting one sample from a wide distribution.
 Reliability is not a fixed property of the agent; it is a distribution, and most
-published numbers show one draw from it.
+published numbers show one draw from it. This project made that error itself: three
+early sessions read 60%, 60%, 50% and were nearly reported as a stable ~55%.
 
 ---
 
@@ -121,11 +136,13 @@ hit.
 
 **How it manifests.** Encountered repeatedly in Bedrock's own build: the free-tier
 daily token cap (100k) is reached partway through a measurement sweep, and further
-calls return HTTP 429.
+calls return HTTP 429. One mechanism-verification sweep halted at run 23 of 50 this
+way - hence the 3/13 session above.
 
 **How it's detected.** The provider raises a hard error; the harness surfaces it and
 stops rather than silently switching providers (which would mix models and confound
-the measurement).
+the measurement). Partial results are written to disk on halt so a truncated sweep is
+still usable data with an honest denominator.
 
 **Does the agent's report reveal it?** **Yes.** This is the exception. A rate-limit
 cliff is a hard, loud failure - the one failure mode in this list that announces
@@ -173,20 +190,24 @@ differently; it was the target moving between measurements.
 
 **How it was resolved.** The distribution was discarded, the config locked
 (`max_text=1500`, `max_elements=60`), and the log tagged with the real config. Three
-clean sessions then measured 60%, 60%, 50% - a range fully consistent with ordinary
-sampling noise around a stable rate near 55% at n=10. No non-determinism required.
+clean sessions then measured 60%, 60%, 50%, which looked like a stable rate near 55%.
+A later pooled measurement of 53 locked-config runs put it at 32%, with one session as
+low as 10%. The lock removed the instrument drift; it did not make the rate tight. The
+honest reading is a wide distribution measured at 32% overall - and the earlier 55%
+was itself an under-powered draw, corrected here rather than defended.
 
-**The finding.** The instability was in the instrument, not the agent. This is worth
-stating plainly because it generalizes: an agent benchmark whose configuration is
-adjusted between runs will report differences that belong to the harness. The
-apparent result was more dramatic than the truth, which is exactly the direction such
-errors tend to run.
+**The finding.** The instability was in the instrument, not the agent - but locking the
+instrument did not produce a stable number, only an honest one. This is worth stating
+plainly because it generalizes: an agent benchmark whose configuration is adjusted
+between runs will report differences that belong to the harness, and a benchmark run
+too few times will report a point estimate that does not exist. Both errors ran in the
+same direction - toward a more dramatic result than the truth.
 
 ---
 
-## Methodology: two errors the harness caught on itself
+## Methodology: three errors the harness caught on itself
 
-Both of the measurement errors in this project were found by the harness before they
+All of the measurement errors in this project were found by the harness before they
 reached a claim. Recording them is not throat-clearing - a measurement apparatus that
 has never caught itself being wrong has not been tested.
 
@@ -201,13 +222,22 @@ trigger were discarded.
 
 **2. Perception config drifted between sessions.** Documented above.
 
-The pattern in both: the error made the numbers *more* interesting, not less. A
+**3. The first mechanism check could not have failed.** The initial
+`verify_mechanism.py` evaluated the success-signature only inside the silent-failure
+branch, so passing runs were never labelled and the script could only ever print
+100%. It was rewritten to label every run regardless of outcome, producing the 17/17
+against 0/36 contrast reported in section 1 - and even that contrast is flagged there
+as partly definitional. A verification that cannot return a negative is not a
+verification.
+
+The pattern in all three: the error made the numbers *more* interesting, not less. A
 non-firing injection produced conditions that looked protective; a drifting config
-produced dramatic variance. Neither would have announced itself in a summary
-statistic - both were only visible in the raw traces and the config history. This is
-the argument for keeping every run replayable and every config recorded, and it is
-the same argument this project makes about agents: a system's own report of what it
-did is not evidence that it did it.
+produced dramatic variance; an unfalsifiable check produced a perfect score. None
+would have announced itself in a summary statistic - all were only visible in the raw
+traces, the config history, and the test code. This is the argument for keeping every
+run replayable and every config recorded, and it is the same argument this project
+makes about agents: a system's own report of what it did is not evidence that it did
+it.
 
 ## The pattern
 
