@@ -51,6 +51,7 @@ try:
                 "already_succeeded": already_succeeded,
                 "action": final.action,
                 "ref": final.action_ref,
+                "n_steps": len(log.steps),
             })
             print(f"s{s} run {i:>2}: {tag} | already_succeeded={already_succeeded} "
                   f"| final={final.action}[{final.action_ref}]")
