@@ -40,7 +40,8 @@ Per-session: 4/10, 4/10, 3/13, 4/10, 1/10, 5/10. The 1/10 session shows the spre
 wider than the 40-60% previously documented; that earlier band came from 4 sessions
 and now reads as a high draw rather than the centre. Earlier unlocked observations
 (up to 80%) are excluded as perception-config artifacts - see the measurement-artifact
-section below. See `docs/evidence/mechanism_runs.json`.
+section below. See `docs/evidence/mechanism_runs_maxsteps8.json` and
+`docs/evidence/mechanism_runs_maxsteps12.json`.
 
 **Mechanism (verified by prediction, N=17).** Every silent failure took one step
 beyond the terminal action: the page already showed "Logout" at the start of the final
@@ -50,6 +51,18 @@ before their final step, though that contrast is partly definitional, since a pa
 construction ends at the step that creates success. The failure is a **stop-condition
 failure**, not a capability failure: the agent can do the task and does, then fails to
 recognise it is done. Scope unchanged - one task, one model.
+
+**Step budget is not the driver (max_steps=8 vs 12).** Raising max_steps from 8 to 12
+did not change the shape of the failure: across 9 instrumented runs at 12, every
+passing run took exactly 3 steps and every silent failure exactly 4. The agent never
+used more than 4 of its 12 available steps. The silent rate at 12 (14/29, pooled from a
+20-run batch and a 9-run batch halted by the token cap) sits inside the per-session
+spread already observed at 8, so the difference is read as sampling noise, not a budget
+effect. This sharpens the mechanism: the agent is not running until it hits a ceiling -
+it takes exactly one step past the terminal action and halts on its own. The
+stop-condition is not absent, it is off by one. Note the step-count claim rests on the
+9 instrumented runs only; the 20-run batch predates per-run step recording and
+contributes to the rate, not to the step distribution.
 
 ---
 
@@ -96,7 +109,8 @@ same config, same session where possible.
 injected drift produced 10/10 silent failures - worse than the no-injection baseline
 (32%, 17/53). The agent did not report confusion; it reported success. Drift did not
 announce itself. Note the asymmetric denominators: the drift figure is a single
-session (n=10) against a 53-run baseline, and has not been repeated.
+session (n=10) against a 53-run baseline (30 of which are retained as per-run
+evidence), and has not been repeated.
 
 **Note.** An earlier provider-mixed run suggested drift might *reduce* silent failure
 by shifting the evidence-destroying element out of reach. That result did not survive
@@ -127,6 +141,12 @@ Reliability is not a fixed property of the agent; it is a distribution, and most
 published numbers show one draw from it. This project made that error itself: three
 early sessions read 60%, 60%, 50% and were nearly reported as a stable ~55%.
 
+**What is stable underneath it.** The *rate* moves; the *shape* does not. Across every
+instrumented run, a pass takes exactly 3 steps and a silent failure exactly 4, and the
+failing action is always the same click on the same ref. Whatever varies between
+sessions determines how often the agent takes the extra step, not what the extra step
+is. A benchmark reporting only the rate would show pure noise and miss the invariant.
+
 ---
 
 ## 5. Rate-limit cliff
@@ -136,8 +156,8 @@ hit.
 
 **How it manifests.** Encountered repeatedly in Bedrock's own build: the free-tier
 daily token cap (100k) is reached partway through a measurement sweep, and further
-calls return HTTP 429. One mechanism-verification sweep halted at run 23 of 50 this
-way - hence the 3/13 session above.
+calls return HTTP 429. One mechanism-verification sweep halted at run 23 of 30 this
+way - hence the 3/13 session above; a later sweep halted at run 9 of 20.
 
 **How it's detected.** The provider raises a hard error; the harness surfaces it and
 stops rather than silently switching providers (which would mix models and confound
