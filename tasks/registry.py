@@ -113,7 +113,7 @@ TASKS: list[Task] = [
         instruction="Log in with username 'admin' and password 'admin'.",
         start_url="https://quotes.toscrape.com/login",
         expect=Expectation(text_contains="Logout"),
-        max_steps=12,
+        max_steps=8,
     ),
     Task(
         id="add_element_analog",
