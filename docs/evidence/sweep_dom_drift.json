@@ -1,0 +1,190 @@
+{
+  "condition": "dom_drift",
+  "task": "quotes_login_form",
+  "requested": 20,
+  "completed": 20,
+  "halted": null,
+  "provider_mixed": false,
+  "runs": [
+    {
+      "run": 1,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 2,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 3,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 4,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 5,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 6,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 7,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 8,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 9,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 10,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 11,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 12,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 13,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 14,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 15,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 16,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 17,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 18,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 19,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 20,
+      "verdict": "silent_failure",
+      "provider": "groq",
+      "n_steps": 4,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    }
+  ]
+}
