@@ -1,0 +1,95 @@
+{
+  "halted": null,
+  "runs": [
+    {
+      "session": 1,
+      "run": 1,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1,
+      "n_steps": 4
+    },
+    {
+      "session": 1,
+      "run": 2,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4,
+      "n_steps": 3
+    },
+    {
+      "session": 1,
+      "run": 3,
+      "silent": true,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1,
+      "n_steps": 4
+    },
+    {
+      "session": 1,
+      "run": 4,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4,
+      "n_steps": 3
+    },
+    {
+      "session": 1,
+      "run": 5,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4,
+      "n_steps": 3
+    },
+    {
+      "session": 1,
+      "run": 6,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4,
+      "n_steps": 3
+    },
+    {
+      "session": 1,
+      "run": 7,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4,
+      "n_steps": 3
+    },
+    {
+      "session": 1,
+      "run": 8,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4,
+      "n_steps": 3
+    },
+    {
+      "session": 1,
+      "run": 9,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4,
+      "n_steps": 3
+    },
+    {
+      "session": 1,
+      "run": 10,
+      "silent": false,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4,
+      "n_steps": 3
+    }
+  ]
+}

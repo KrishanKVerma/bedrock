@@ -36,14 +36,15 @@ class Injection:
     apply: Callable[[Page], str]
     fire_when_url_contains: str | None = None  # fire once the page URL contains this
     at_step: int = 0  # fallback: fire before this step (0 = never by step)
+    fire_when_url_excludes: str | None = None  # never fire while URL contains this
 
     def should_fire(self, url: str, step: int, already_fired: bool) -> bool:
         if already_fired or self.kind == "none":
             return False
+        if self.fire_when_url_excludes and self.fire_when_url_excludes in url:
+            return False
         if self.fire_when_url_contains is not None:
             return self.fire_when_url_contains in url
-        if self.at_step > 0:
-            return step == self.at_step
         return False
 
     def describe(self) -> str:
@@ -91,7 +92,7 @@ def _drift(page: Page) -> str:
 
 
 def dom_drift(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
-    return Injection(kind="dom_drift", apply=_drift, fire_when_url_contains=fire_when_url_contains)
+    return Injection(kind="dom_drift", apply=_drift, fire_when_url_contains=fire_when_url_contains, fire_when_url_excludes="/login")
 
 # ---------- Reorder: the harder version of drift ----------
 
@@ -123,8 +124,7 @@ def _reorder(page: Page) -> str:
 
 
 def dom_reorder(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
-    return Injection(kind="dom_drift", apply=_reorder, fire_when_url_contains=fire_when_url_contains)
-
+    return Injection(kind="index_shift", apply=_reorder, fire_when_url_contains=fire_when_url_contains, fire_when_url_excludes="/login")
 # ---------- Modal interruption ----------
 
 
@@ -165,4 +165,4 @@ def _modal(page: Page) -> str:
 
 
 def modal(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
-    return Injection(kind="modal", apply=_modal, fire_when_url_contains=fire_when_url_contains)
+    return Injection(kind="modal", apply=_modal, fire_when_url_contains=fire_when_url_contains, fire_when_url_excludes="/login")

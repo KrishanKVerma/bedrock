@@ -1,0 +1,37 @@
+{
+  "condition": "index_shift",
+  "task": "quotes_login_form",
+  "requested": 3,
+  "completed": 3,
+  "halted": null,
+  "provider_mixed": false,
+  "runs": [
+    {
+      "run": 1,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 2,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 3,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    }
+  ]
+}
