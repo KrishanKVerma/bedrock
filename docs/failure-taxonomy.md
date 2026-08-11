@@ -34,13 +34,13 @@ result.
 **Does the agent's report reveal it?** **No.** The agent reports success. This is
 the core case: the self-report and reality point in opposite directions.
 
-**Rate.** 17/53 runs (32%) at locked config (Groq Llama-3.3-70B, 1500 chars, 60
-elements, max_steps=8), pooled across 6 sessions from one measurement script.
-Per-session: 4/10, 4/10, 3/13, 4/10, 1/10, 5/10. The 1/10 session shows the spread is
-wider than the 40-60% previously documented; that earlier band came from 4 sessions
-and now reads as a high draw rather than the centre. Earlier unlocked observations
-(up to 80%) are excluded as perception-config artifacts - see the measurement-artifact
-section below. See `docs/evidence/mechanism_runs_maxsteps8.json` and
+**Rate.** 25/65 runs (38%) at locked config (Groq Llama-3.3-70B, 1500 chars, 60
+elements, max_steps=8), pooled across 7 sessions. Per-session: 4/10, 4/10, 3/13, 4/10,
+1/10, 5/10, 8/12 - a spread from 10% to 67%. An earlier reading of this same series as
+40-60% came from the first 4 sessions and now reads as a high draw rather than the
+centre. Earlier unlocked observations (up to 80%) are excluded as perception-config
+artifacts - see the measurement-artifact section below. See
+`docs/evidence/mechanism_runs_maxsteps8.json` and
 `docs/evidence/mechanism_runs_maxsteps12.json`.
 
 **Mechanism (verified by prediction, N=17).** Every silent failure took one step
@@ -93,30 +93,56 @@ oversight, for opposite reasons.
 
 ---
 
-## 3. DOM selector drift
+## 3. DOM selector drift and index shift
 
-**What it is.** The page's structure changes between deployments - classes, ids, and
-data attributes are renamed - while the page looks identical to a human.
+**What they are.** Two distinct perturbations of the page the agent is working on.
+*Selector drift*: classes, ids, and data attributes are renamed between deployments,
+so the page looks identical to a human while every structural hook has changed.
+*Index shift*: decoy elements are inserted ahead of the real ones, so every positional
+ref the agent holds is off by N. They are kept separate deliberately - drift attacks
+the names of things, index shift attacks their positions, and the mechanism this
+project found is positional.
 
-**How it manifests.** The harness renames class/id/data-test on every interactive
-element mid-run, simulating a site redeploy. The visible page is unchanged; every
-structural hook is different.
+**How they manifest.** The harness applies the perturbation to the post-login page -
+the page where the silent failure happens - and leaves the route to that page alone.
+The agent's path to success is therefore unchanged; only what it sees on arrival
+differs.
 
-**How it's detected.** Compared against the no-injection baseline for the same task,
-same config, same session where possible.
+**How they're detected.** Compared against the no-injection baseline for the same
+task, same config, same session where possible.
 
-**Does the agent's report reveal it?** **No.** Under clean single-provider runs,
-injected drift produced 10/10 silent failures - worse than the no-injection baseline
-(32%, 17/53). The agent did not report confusion; it reported success. Drift did not
-announce itself. Note the asymmetric denominators: the drift figure is a single
-session (n=10) against a 53-run baseline (30 of which are retained as per-run
-evidence), and has not been repeated.
+**Does the agent's report reveal it?** **Not yet answerable.** All previously reported
+figures for these conditions have been withdrawn - see below. Re-measurement is in
+progress.
+
+**Withdrawn results.** Earlier numbers for these conditions (dom_drift 90% and later
+12/20 silent; index_shift 30% and later 6/20) were produced by a harness bug and are
+not results about the agent. The injection trigger was `url contains
+"quotes.toscrape.com/"`, which also matches the login page at
+`quotes.toscrape.com/login`. Every injection therefore fired on first page load,
+perturbing the login page, and was already spent by the time the post-login page
+appeared. The tell was in the per-run evidence: under index shift the Login button
+moved from ref 4 to ref 7 - the login page had been disturbed - while every silent
+failure still clicked Logout at ref 1, unmoved. The condition never touched the page
+the mechanism lives on. Raw data is retained as
+`docs/evidence/sweep_*_INVALID_trigger_bug.json`. Fixed by excluding `/login` from the
+trigger, so injections fire only once the post-login page is reached.
+
+**Re-measurement so far (index shift, fixed trigger).** 0 silent failures in 14 runs,
+against a no-injection session from the same week that produced 8 silent in 12. All 14
+passes took 3 steps and ended on ref 4, identical to baseline, confirming the route to
+success was unperturbed and only the post-login page differed. This is reported as a
+count, not a rate: 14 runs cannot support a percentage, and no silent failure has yet
+been observed under the fixed condition, so where the Logout element lands after
+re-indexing remains unconfirmed. Two readings still fit the data - that shifting Logout
+off its low ref removes the bait, or that the perturbation prevents the extra step by
+some other route. Distinguishing them needs a silent failure to actually occur. Full
+re-measurement of both conditions at n=20 is pending.
 
 **Note.** An earlier provider-mixed run suggested drift might *reduce* silent failure
-by shifting the evidence-destroying element out of reach. That result did not survive
-a clean single-provider re-run for class/id drift. Whether *index-shift* drift (a
-different injector) is protective is not yet settled - it must not be conflated with
-class/id drift.
+by shifting the evidence-destroying element out of reach. That result did not survive a
+clean single-provider re-run, and the re-run itself is now withdrawn under the trigger
+bug. Nothing is currently known about whether drift is protective.
 
 ---
 
@@ -125,9 +151,10 @@ class/id drift.
 **What it is.** The same agent, same task, same configuration produces different
 outcomes across runs and - more strongly - across sessions.
 
-**How it manifests.** At locked config, per-session silent-failure counts across six
-sessions were 4/10, 4/10, 3/13, 4/10, 1/10, 5/10 - a spread from 10% to 40% around a
-pooled 32%. Temperature is 0; this variance is not from sampling temperature.
+**How it manifests.** At locked config, per-session silent-failure counts across seven
+sessions were 4/10, 4/10, 3/13, 4/10, 1/10, 5/10, 8/12 - a spread from 10% to 67%
+around a pooled 25/65 (38%). Temperature is 0; this variance is not from sampling
+temperature, and it has widened rather than converged as runs accumulated.
 
 **How it's detected.** Multi-run sweeps, repeated across sessions, with denominators
 kept visible. A single run - or a single session - cannot reveal it.
@@ -211,10 +238,11 @@ differently; it was the target moving between measurements.
 **How it was resolved.** The distribution was discarded, the config locked
 (`max_text=1500`, `max_elements=60`), and the log tagged with the real config. Three
 clean sessions then measured 60%, 60%, 50%, which looked like a stable rate near 55%.
-A later pooled measurement of 53 locked-config runs put it at 32%, with one session as
-low as 10%. The lock removed the instrument drift; it did not make the rate tight. The
-honest reading is a wide distribution measured at 32% overall - and the earlier 55%
-was itself an under-powered draw, corrected here rather than defended.
+A later pooled measurement of 65 locked-config runs put it at 38%, with sessions
+ranging from 10% to 67%. The lock removed the instrument drift; it did not make the
+rate tight. The honest reading is a wide distribution - 10% to 67% across sessions,
+38% overall - and the earlier 55% was itself an under-powered draw, corrected here
+rather than defended.
 
 **The finding.** The instability was in the instrument, not the agent - but locking the
 instrument did not produce a stable number, only an honest one. This is worth stating
@@ -225,7 +253,7 @@ same direction - toward a more dramatic result than the truth.
 
 ---
 
-## Methodology: three errors the harness caught on itself
+## Methodology: four errors the harness caught on itself
 
 All of the measurement errors in this project were found by the harness before they
 reached a claim. Recording them is not throat-clearing - a measurement apparatus that
@@ -250,14 +278,30 @@ against 0/36 contrast reported in section 1 - and even that contrast is flagged 
 as partly definitional. A verification that cannot return a negative is not a
 verification.
 
-The pattern in all three: the error made the numbers *more* interesting, not less. A
+**4. The page-state trigger fired on the wrong page.** The fix for error 1 replaced
+step-number triggering with a URL match, `url contains "quotes.toscrape.com/"`. That
+string also matches the login page at `quotes.toscrape.com/login`, so every injection
+fired on first load and was spent before the agent reached the page the mechanism
+lives on. Two full conditions were measured against a perturbation that never touched
+the relevant page. Detected only because per-run evidence recorded the clicked ref: the
+Login button had moved from 4 to 7, proving the injection fired, while every silent
+failure still clicked Logout at ref 1, proving it fired somewhere irrelevant. Fixed by
+excluding `/login` from the trigger. Note that this is error 1 recurring in a new form
+- the fix for a mistriggered injection was itself mistriggered, and the second version
+was harder to see because it produced plausible numbers instead of obviously missing
+ones.
+
+The pattern in all four: the error made the numbers *more* interesting, not less. A
 non-firing injection produced conditions that looked protective; a drifting config
-produced dramatic variance; an unfalsifiable check produced a perfect score. None
-would have announced itself in a summary statistic - all were only visible in the raw
-traces, the config history, and the test code. This is the argument for keeping every
-run replayable and every config recorded, and it is the same argument this project
-makes about agents: a system's own report of what it did is not evidence that it did
-it.
+produced dramatic variance; an unfalsifiable check produced a perfect score; a
+mistargeted injection produced a clean difference between conditions that were in fact
+identical. None would have announced itself in a summary statistic - all were only
+visible in the raw traces, the config history, and the test code. Error 4 is the
+sharpest case: it was caught by a field (the clicked element's ref) added for an
+unrelated reason, and would have survived any amount of staring at the rates alone.
+This is the argument for keeping every run replayable and every config recorded, and it
+is the same argument this project makes about agents: a system's own report of what it
+did is not evidence that it did it.
 
 ## The pattern
 
@@ -267,7 +311,7 @@ Read down the "does the agent's report reveal it?" column:
 |---|---|
 | Silent failure | No |
 | Weak-oracle pass | No |
-| DOM drift | No |
+| DOM drift / index shift | Not yet measured |
 | Non-determinism | No |
 | Rate-limit cliff | Yes |
 
