@@ -52,6 +52,39 @@ construction ends at the step that creates success. The failure is a **stop-cond
 failure**, not a capability failure: the agent can do the task and does, then fails to
 recognise it is done. Scope unchanged - one task, one model.
 
+**Competing explanation: positional bias, not stop-condition failure.** The mechanism
+above is described as a stop-condition failure - the agent completes the task, does not
+recognise it is done, and takes one step too many. That framing is a claim about task
+understanding, and the index-shift result in section 3 puts pressure on it.
+
+Moving the Logout link three positions down the element list - from ref 1 to ref 4,
+with the element otherwise unchanged, still visible, still labelled, still on the same
+page - took the silent-failure rate from 10%-67% to 0 in 34 runs. If the failure were
+primarily a failure to recognise task completion, a three-position displacement of one
+element should not fix it. The agent would still not know it was done, and would still
+have a destructive action available.
+
+So there is a second reading, at least as well supported by the data: the agent has a
+strong prior toward selecting low-numbered refs, ref[1] is chosen far more often than
+its content warrants, and on this page ref[1] happened to be the action that destroys
+the goal state. On that reading the "extra step" is not a reasoning failure about
+stopping but a positional artifact of ref-based action selection, and the silent
+failure is what happens when a low-ref element is destructive.
+
+The two readings are not mutually exclusive - an agent that knew it was finished would
+not take the extra step regardless of what sat at ref[1] - but they attribute the
+failure to different parts of the system, and they suggest different fixes. The
+stop-condition reading points at post-action verification. The positional reading
+points at the perception layer, and implies that any ref-based action space is fragile
+in a way that can silently destroy goal state depending on where a destructive control
+happens to land.
+
+Nothing measured so far separates them. Distinguishing them would need a task where the
+destructive action sits at a high ref from the outset, or a perception layer that
+presents actions without positional ordering. Both are open. Until then this project
+reports the mechanism as observed - one step past the terminal action, onto the same
+element - and does not claim to know which layer is responsible.
+
 **Step budget is not the driver (max_steps=8 vs 12).** Raising max_steps from 8 to 12
 did not change the shape of the failure: across 9 instrumented runs at 12, every
 passing run took exactly 3 steps and every silent failure exactly 4. The agent never
@@ -111,10 +144,6 @@ differs.
 **How they're detected.** Compared against the no-injection baseline for the same
 task, same config, same session where possible.
 
-**Does the agent's report reveal it?** **Not yet answerable.** All previously reported
-figures for these conditions have been withdrawn - see below. Re-measurement is in
-progress.
-
 **Withdrawn results.** Earlier numbers for these conditions (dom_drift 90% and later
 12/20 silent; index_shift 30% and later 6/20) were produced by a harness bug and are
 not results about the agent. The injection trigger was `url contains
@@ -128,21 +157,49 @@ the mechanism lives on. Raw data is retained as
 `docs/evidence/sweep_*_INVALID_trigger_bug.json`. Fixed by excluding `/login` from the
 trigger, so injections fire only once the post-login page is reached.
 
-**Re-measurement so far (index shift, fixed trigger).** 0 silent failures in 14 runs,
-against a no-injection session from the same week that produced 8 silent in 12. All 14
-passes took 3 steps and ended on ref 4, identical to baseline, confirming the route to
-success was unperturbed and only the post-login page differed. This is reported as a
-count, not a rate: 14 runs cannot support a percentage, and no silent failure has yet
-been observed under the fixed condition, so where the Logout element lands after
-re-indexing remains unconfirmed. Two readings still fit the data - that shifting Logout
-off its low ref removes the bait, or that the perturbation prevents the extra step by
-some other route. Distinguishing them needs a silent failure to actually occur. Full
-re-measurement of both conditions at n=20 is pending.
+### Index shift: three positions eliminates the failure
 
-**Note.** An earlier provider-mixed run suggested drift might *reduce* silent failure
-by shifting the evidence-destroying element out of reach. That result did not survive a
-clean single-provider re-run, and the re-run itself is now withdrawn under the trigger
-bug. Nothing is currently known about whether drift is protective.
+**Result.** 0 silent failures in 34 runs with the fixed trigger, against a
+no-injection baseline running 10%-67% across sessions (25/65 pooled). All 34 passes
+took 3 steps and ended on ref 4, identical to baseline, confirming the route to
+success was unperturbed and only the post-login page differed. Zero in 34 is not
+explicable as sampling noise against that baseline.
+
+**What the injection actually does.** A direct probe (`tests/probe_logout_ref.py`,
+no planner, no model calls) dumps the element list after the injection fires. Three
+decoy links are inserted at the top of the DOM, and the Logout link moves from **ref 1
+to ref 4**. That is the entire intervention. The element is still present, still
+visible, still clickable, still labelled "Logout," and still on the same page. Nothing
+about it changed except its position in an enumerated list.
+
+**A three-position shift takes the silent-failure rate from 10%-67% to 0/34.**
+
+**Does the agent's report reveal it?** **Not applicable in the usual sense.** Under
+index shift there were no silent failures to report on. The condition does not produce
+a failure the agent hides; it removes the failure.
+
+**What this implies, stated carefully.** The obvious reading is that ref position is
+the bait: the destructive element sat at a low, frequently-chosen index, and moving it
+three places down removed it from the agent's reach. That is consistent with everything
+observed, including the perception-config artifact documented below, where the same
+element moved out of easy reach at 30 elements and the rate collapsed.
+
+But the magnitude is doing something to the interpretation and it should be said out
+loud. If displacing an element by three positions - not hiding it, not renaming it, not
+removing it - eliminates the failure entirely, then the agent's action selection is
+strongly biased toward low refs, and the failure is substantially an artifact of list
+position rather than of reasoning about the task. See the caveat in section 1: this is
+a competing explanation for the mechanism, not merely a confirmation of it.
+
+**dom_drift.** Not yet re-measured with the fixed trigger. An earlier provider-mixed
+run suggested drift might reduce silent failure by shifting the evidence-destroying
+element out of reach; that result did not survive a clean single-provider re-run, and
+the re-run is itself withdrawn under the trigger bug. Nothing is currently known about
+whether drift is protective. Note that if drift proves protective, it would most likely
+be for the same positional reason as index shift rather than for anything to do with
+selector names.
+
+**modal.** Not yet re-measured with the fixed trigger.
 
 ---
 
@@ -311,7 +368,8 @@ Read down the "does the agent's report reveal it?" column:
 |---|---|
 | Silent failure | No |
 | Weak-oracle pass | No |
-| DOM drift / index shift | Not yet measured |
+| Index shift | Removes the failure (0/34) |
+| DOM drift / modal | Not yet measured |
 | Non-determinism | No |
 | Rate-limit cliff | Yes |
 
