@@ -76,6 +76,9 @@ def sweep_condition(condition: str, runs: int, task_id: str = "quotes_login_form
         print(f"\nhalted after {len(results)} runs — {type(e).__name__}")
 
     done = len(results)
+    if done == 0:
+        print("no runs completed - not writing evidence file")
+        return
     mixed = len(set(providers)) > 1
 
     out = Path("docs/evidence") / f"sweep_{condition}.json"
