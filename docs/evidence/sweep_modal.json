@@ -1,0 +1,127 @@
+{
+  "condition": "modal",
+  "task": "quotes_login_form",
+  "requested": 20,
+  "completed": 13,
+  "halted": "RateLimitError: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kq34e23wfa4b099jygzqsj9a` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99219, Requested 1307. Please try again in 7m34.464s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}",
+  "provider_mixed": false,
+  "runs": [
+    {
+      "run": 1,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 2,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 3,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 4,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 5,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 5,
+      "already_succeeded": true,
+      "action": "click",
+      "ref": 1
+    },
+    {
+      "run": 6,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 7,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 8,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 9,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 10,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 11,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 12,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    },
+    {
+      "run": 13,
+      "verdict": "pass",
+      "provider": "groq",
+      "n_steps": 3,
+      "already_succeeded": false,
+      "action": "click",
+      "ref": 4
+    }
+  ]
+}

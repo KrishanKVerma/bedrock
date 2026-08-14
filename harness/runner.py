@@ -53,10 +53,12 @@ def run_task(
             if injection.should_fire(session.page.url, n, injected_done):
                 try:
                     detail = injection.apply(session.page)
-                    history.append(f"[harness injected {injection.kind}: {detail}]")
+                    log.injection_detail = f"{injection.kind}: {detail}"
+                    log.injection_step = n
                     injected_done = True
                 except Exception as exc:  # noqa: BLE001 — injection failure must not fake an agent failure
-                    history.append(f"[injection failed: {exc}]")
+                    log.injection_detail = f"{injection.kind}: FAILED {exc}"
+                    log.injection_step = n
                     injected_done = True
 
             state = perceive(session.page)

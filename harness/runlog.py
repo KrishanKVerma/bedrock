@@ -51,6 +51,8 @@ class RunLog:
     start_url: str = ""
     expectation: str = ""
     injected: str = "none"
+    injection_detail: str = ""
+    injection_step: int = 0
     provider: str = ""
     started_at: float = field(default_factory=time.time)
     steps: list[StepTrace] = field(default_factory=list)
