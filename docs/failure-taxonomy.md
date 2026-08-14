@@ -34,14 +34,15 @@ result.
 **Does the agent's report reveal it?** **No.** The agent reports success. This is
 the core case: the self-report and reality point in opposite directions.
 
-**Rate.** 25/65 runs (38%) at locked config (Groq Llama-3.3-70B, 1500 chars, 60
-elements, max_steps=8), pooled across 7 sessions. Per-session: 4/10, 4/10, 3/13, 4/10,
-1/10, 5/10, 8/12 - a spread from 10% to 67%. An earlier reading of this same series as
-40-60% came from the first 4 sessions and now reads as a high draw rather than the
-centre. Earlier unlocked observations (up to 80%) are excluded as perception-config
-artifacts - see the measurement-artifact section below. See
-`docs/evidence/mechanism_runs_maxsteps8.json` and
-`docs/evidence/mechanism_runs_maxsteps12.json`.
+**Rate.** 33/85 runs (39%) at locked config (Groq Llama-3.3-70B, 1500 chars, 60
+elements, max_steps=8), pooled across 8 sessions. Per-session: 4/10, 4/10, 3/13, 4/10,
+1/10, 5/10, 8/12, 8/20 - a spread from 10% to 67%. An earlier reading of this same
+series as 40-60% came from the first 4 sessions and now reads as a high draw rather
+than the centre. Earlier unlocked observations (up to 80%) are excluded as
+perception-config artifacts - see the measurement-artifact section below. See
+`docs/evidence/mechanism_runs_maxsteps8.json`,
+`docs/evidence/mechanism_runs_maxsteps12.json`, and
+`docs/evidence/sweep_no_injection.json`.
 
 **Mechanism (verified by prediction, N=17).** Every silent failure took one step
 beyond the terminal action: the page already showed "Logout" at the start of the final
@@ -79,11 +80,16 @@ points at the perception layer, and implies that any ref-based action space is f
 in a way that can silently destroy goal state depending on where a destructive control
 happens to land.
 
-Nothing measured so far separates them. Distinguishing them would need a task where the
-destructive action sits at a high ref from the outset, or a perception layer that
-presents actions without positional ordering. Both are open. Until then this project
-reports the mechanism as observed - one step past the terminal action, onto the same
-element - and does not claim to know which layer is responsible.
+Note that dom_drift, later shown to be a no-op at the perception layer, also produced
+0/18 - so a zero-run is demonstrably reachable in this setup without any causal effect.
+Index shift's 0/34 is twice that length and has a verified mechanism, but the drift
+result is a reminder that the zero itself is not the evidence.
+
+Nothing measured so far separates the two readings. Distinguishing them would need a
+task where the destructive action sits at a high ref from the outset, or a perception
+layer that presents actions without positional ordering. Both are open. Until then this
+project reports the mechanism as observed - one step past the terminal action, onto the
+same element - and does not claim to know which layer is responsible.
 
 **Step budget is not the driver (max_steps=8 vs 12).** Raising max_steps from 8 to 12
 did not change the shape of the failure: across 9 instrumented runs at 12, every
@@ -160,10 +166,9 @@ trigger, so injections fire only once the post-login page is reached.
 ### Index shift: three positions eliminates the failure
 
 **Result.** 0 silent failures in 34 runs with the fixed trigger, against a
-no-injection baseline running 10%-67% across sessions (25/65 pooled). All 34 passes
+no-injection baseline running 10%-67% across sessions (33/85 pooled). All 34 passes
 took 3 steps and ended on ref 4, identical to baseline, confirming the route to
-success was unperturbed and only the post-login page differed. Zero in 34 is not
-explicable as sampling noise against that baseline.
+success was unperturbed and only the post-login page differed.
 
 **What the injection actually does.** A direct probe (`tests/probe_logout_ref.py`,
 no planner, no model calls) dumps the element list after the injection fires. Three
@@ -189,17 +194,42 @@ loud. If displacing an element by three positions - not hiding it, not renaming 
 removing it - eliminates the failure entirely, then the agent's action selection is
 strongly biased toward low refs, and the failure is substantially an artifact of list
 position rather than of reasoning about the task. See the caveat in section 1: this is
-a competing explanation for the mechanism, not merely a confirmation of it.
+a competing explanation for the mechanism, not merely a confirmation of it. Note also
+that the drift condition below produced a zero-run with no causal mechanism at all,
+which is the reason this result rests on the probe rather than on the zero.
 
-**dom_drift.** Not yet re-measured with the fixed trigger. An earlier provider-mixed
-run suggested drift might reduce silent failure by shifting the evidence-destroying
-element out of reach; that result did not survive a clean single-provider re-run, and
-the re-run is itself withdrawn under the trigger bug. Nothing is currently known about
-whether drift is protective. Note that if drift proves protective, it would most likely
-be for the same positional reason as index shift rather than for anything to do with
-selector names.
+### DOM selector drift: a null condition, and why that matters
 
-**modal.** Not yet re-measured with the fixed trigger.
+**Result.** 0 silent failures in 18 runs with the fixed trigger. That looked
+protective. It is not - the condition cannot affect this agent at all.
+
+**Why.** `_drift` renames `class`, `id`, and `data-test` on every interactive element
+(41 attributes on the post-login page). The perception layer passes the planner
+`ref, tag, text, role, name, value` - none of which are class, id, or data-test. A
+direct probe (`tests/probe_drift_ref.py`) captured the perceived state before and
+after the injection fired: 60 elements before, 60 after, element list byte-identical,
+page text identical. The planner receives exactly the same input with and without
+drift.
+
+**So the 0/18 has no mechanism.** With a session rate that has ranged 10%-67%, a
+zero-run at n=18 is improbable but reachable - and improbable-but-reachable is the
+only explanation left, because the causal one is ruled out. The number is not
+evidence of a protective effect and is not reported as one.
+
+**What this actually shows.** Selector drift is invisible to a text-based perception
+layer. It breaks agents that key on selectors; this agent keys on visible text and
+positional refs, so renaming every hook on the page is a no-op. That is a real
+limitation of the experiment - the condition was designed against a different agent
+architecture than the one being measured - and it is also a finding about the
+architecture: an agent that ignores structure is immune to structural churn, and
+correspondingly more exposed to anything positional.
+
+**dom_drift is therefore a second control, not a condition.** Running it is equivalent
+to running no_injection. It is retained for that purpose.
+
+### Modal interruption
+
+Not yet re-measured with the fixed trigger.
 
 ---
 
@@ -208,9 +238,9 @@ selector names.
 **What it is.** The same agent, same task, same configuration produces different
 outcomes across runs and - more strongly - across sessions.
 
-**How it manifests.** At locked config, per-session silent-failure counts across seven
-sessions were 4/10, 4/10, 3/13, 4/10, 1/10, 5/10, 8/12 - a spread from 10% to 67%
-around a pooled 25/65 (38%). Temperature is 0; this variance is not from sampling
+**How it manifests.** At locked config, per-session silent-failure counts across eight
+sessions were 4/10, 4/10, 3/13, 4/10, 1/10, 5/10, 8/12, 8/20 - a spread from 10% to 67%
+around a pooled 33/85 (39%). Temperature is 0; this variance is not from sampling
 temperature, and it has widened rather than converged as runs accumulated.
 
 **How it's detected.** Multi-run sweeps, repeated across sessions, with denominators
@@ -241,12 +271,15 @@ hit.
 **How it manifests.** Encountered repeatedly in Bedrock's own build: the free-tier
 daily token cap (100k) is reached partway through a measurement sweep, and further
 calls return HTTP 429. One mechanism-verification sweep halted at run 23 of 30 this
-way - hence the 3/13 session above; a later sweep halted at run 9 of 20.
+way - hence the 3/13 session above; a later sweep halted at run 9 of 20, and the drift
+sweep at run 18 of 20.
 
 **How it's detected.** The provider raises a hard error; the harness surfaces it and
 stops rather than silently switching providers (which would mix models and confound
 the measurement). Partial results are written to disk on halt so a truncated sweep is
-still usable data with an honest denominator.
+still usable data with an honest denominator - and a sweep that completes zero runs
+writes nothing at all, after an early version of this guard overwrote a completed
+session with an empty file.
 
 **Does the agent's report reveal it?** **Yes.** This is the exception. A rate-limit
 cliff is a hard, loud failure - the one failure mode in this list that announces
@@ -295,10 +328,10 @@ differently; it was the target moving between measurements.
 **How it was resolved.** The distribution was discarded, the config locked
 (`max_text=1500`, `max_elements=60`), and the log tagged with the real config. Three
 clean sessions then measured 60%, 60%, 50%, which looked like a stable rate near 55%.
-A later pooled measurement of 65 locked-config runs put it at 38%, with sessions
+A later pooled measurement of 85 locked-config runs put it at 39%, with sessions
 ranging from 10% to 67%. The lock removed the instrument drift; it did not make the
 rate tight. The honest reading is a wide distribution - 10% to 67% across sessions,
-38% overall - and the earlier 55% was itself an under-powered draw, corrected here
+39% overall - and the earlier 55% was itself an under-powered draw, corrected here
 rather than defended.
 
 **The finding.** The instability was in the instrument, not the agent - but locking the
@@ -307,6 +340,11 @@ plainly because it generalizes: an agent benchmark whose configuration is adjust
 between runs will report differences that belong to the harness, and a benchmark run
 too few times will report a point estimate that does not exist. Both errors ran in the
 same direction - toward a more dramatic result than the truth.
+
+Note the direct connection to section 3: the mechanism by which config drift produced
+the artifact - an element moving to a different positional ref - is the same mechanism
+the index-shift condition later exercised deliberately. What was first encountered as a
+measurement bug turned out to be the intervention.
 
 ---
 
@@ -360,6 +398,16 @@ This is the argument for keeping every run replayable and every config recorded,
 is the same argument this project makes about agents: a system's own report of what it
 did is not evidence that it did it.
 
+**A near-miss that was not an error.** After the trigger fix, two conditions in a row
+returned zero silent failures - 34 runs and 18 runs - against a baseline that had been
+running 8/12 in the preceding session. That could have been written up as two
+independent protective interventions. Instead a no-injection control was run first: it
+returned 8/20, confirming the phenomenon still reproduced and that nothing had shifted
+system-wide. Only then were the two conditions examined individually, at which point
+one turned out to have a verified mechanism and the other turned out to have none. The
+control cost 20 runs and was the difference between one real finding and two claimed
+ones.
+
 ## The pattern
 
 Read down the "does the agent's report reveal it?" column:
@@ -368,10 +416,12 @@ Read down the "does the agent's report reveal it?" column:
 |---|---|
 | Silent failure | No |
 | Weak-oracle pass | No |
-| Index shift | Removes the failure (0/34) |
-| DOM drift / modal | Not yet measured |
 | Non-determinism | No |
 | Rate-limit cliff | Yes |
+
+Injection conditions are not failures the agent reports on and sit outside this table.
+Index shift removes the silent failure entirely (0/34, mechanism verified); DOM drift
+is a no-op for this agent's perception layer; modal is not yet measured.
 
 Every dangerous failure is invisible in the agent's own account of itself. The only
 one the agent reliably reports is the one that was never subtle. This is the case for
