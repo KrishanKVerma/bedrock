@@ -83,6 +83,11 @@ def sweep_condition(condition: str, runs: int, task_id: str = "quotes_login_form
 
     prov = providers[0] if providers else "unknown"
     out = Path("docs/evidence") / f"sweep_{prov}_{condition}.json"
+    if out.exists():
+        prev = json.load(out.open()).get("completed", 0)
+        if done < prev:
+            out = out.with_name(f"{out.stem}_partial{done}.json")
+            print(f"existing file has {prev} runs; writing partial to {out.name}")
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w") as f:
         json.dump({
