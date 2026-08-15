@@ -32,6 +32,7 @@ GROQ_MODEL = "llama-3.3-70b-versatile"
 OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct"
 CEREBRAS_MODEL = "gpt-oss-120b"
 GEMINI_MODEL = "gemini-3.5-flash"
+MISTRAL_MODEL = "mistral-small-latest"
 
 # Which provider served the most recent call. Recorded into run logs.
 last_provider: str = "none"
@@ -164,6 +165,18 @@ def _ask_gemini(user: str) -> str:
     )
     return r.text
 
+def _ask_mistral(user: str) -> str:
+    key = os.getenv("MISTRAL_API_KEY")
+    if not key:
+        raise RuntimeError("MISTRAL_API_KEY not set.")
+    client = OpenAI(api_key=key, base_url="https://api.mistral.ai/v1")
+    r = client.chat.completions.create(
+        model=MISTRAL_MODEL,
+        temperature=0,
+        messages=[{"role": "system", "content": _SYSTEM}, {"role": "user", "content": user}],
+    )
+    return r.choices[0].message.content
+
 def plan(task: str, state: PageState, history: list[str] | None = None) -> Action:
     """Decide the next action for `task` given the current page.
 
@@ -195,6 +208,9 @@ def plan(task: str, state: PageState, history: list[str] | None = None) -> Actio
     elif locked == "gemini":
         raw = _ask_gemini(user)
         last_provider = "gemini"    
+    elif locked == "mistral":
+        raw = _ask_mistral(user)
+        last_provider = "mistral"    
     else:
         try:
             raw = _ask_groq(user)

@@ -19,6 +19,7 @@ from tasks.registry import Task
 from harness.inject import NO_INJECTION, Injection
 from agent import plan as plan_module
 
+
 def run_task(
     task: Task,
     headless: bool = False,
@@ -60,6 +61,14 @@ def run_task(
                     log.injection_detail = f"{injection.kind}: FAILED {exc}"
                     log.injection_step = n
                     injected_done = True
+
+            # Settle the page before reading it. A click that triggers navigation can
+            # destroy the execution context mid-query, which surfaces as a Playwright
+            # error and would otherwise be recorded as an agent failure.
+            try:
+                session.page.wait_for_load_state("domcontentloaded", timeout=5000)
+            except Exception:  # noqa: BLE001 — a load-state timeout is not an agent failure
+                pass
 
             state = perceive(session.page)
 
