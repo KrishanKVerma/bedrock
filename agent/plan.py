@@ -31,6 +31,7 @@ load_dotenv()
 GROQ_MODEL = "llama-3.3-70b-versatile"
 OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct"
 CEREBRAS_MODEL = "gpt-oss-120b"
+GEMINI_MODEL = "gemini-3.5-flash"
 
 # Which provider served the most recent call. Recorded into run logs.
 last_provider: str = "none"
@@ -145,6 +146,24 @@ def _ask_cerebras(user: str) -> str:
     )
     return r.choices[0].message.content or ""
 
+def _ask_gemini(user: str) -> str:
+    from google import genai
+    from google.genai import types
+
+    key = os.getenv("GEMINI_API_KEY")
+    if not key:
+        raise RuntimeError("GEMINI_API_KEY not set.")
+    client = genai.Client(api_key=key)
+    r = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=user,
+        config=types.GenerateContentConfig(
+            system_instruction=_SYSTEM,
+            temperature=0,
+        ),
+    )
+    return r.text
+
 def plan(task: str, state: PageState, history: list[str] | None = None) -> Action:
     """Decide the next action for `task` given the current page.
 
@@ -173,6 +192,9 @@ def plan(task: str, state: PageState, history: list[str] | None = None) -> Actio
     elif locked == "cerebras":
         raw = _ask_cerebras(user)
         last_provider = "cerebras"    
+    elif locked == "gemini":
+        raw = _ask_gemini(user)
+        last_provider = "gemini"    
     else:
         try:
             raw = _ask_groq(user)

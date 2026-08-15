@@ -81,7 +81,8 @@ def sweep_condition(condition: str, runs: int, task_id: str = "quotes_login_form
         return
     mixed = len(set(providers)) > 1
 
-    out = Path("docs/evidence") / f"sweep_{condition}.json"
+    prov = providers[0] if providers else "unknown"
+    out = Path("docs/evidence") / f"sweep_{prov}_{condition}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w") as f:
         json.dump({
