@@ -168,10 +168,10 @@ def modal(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
     return Injection(kind="modal", apply=_modal, fire_when_url_contains=fire_when_url_contains, fire_when_url_excludes="/login")
 
 def _session_expire(page: Page) -> str:
-    """Clear cookies mid-run: the session dies but the page still looks logged in."""
+    """Clear cookies, then reload: the session is dead and the page now shows it."""
     page.context.clear_cookies()
-    return "cleared all cookies (session invalidated)"
-
+    page.reload(wait_until="domcontentloaded")
+    return "cleared cookies and reloaded (session invalidated)"
 
 def session_expiry(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
     return Injection(kind="session_expiry", apply=_session_expire,
