@@ -18,16 +18,17 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-
-from harness.inject import NO_INJECTION, dom_drift, dom_reorder, modal
+from harness.inject import NO_INJECTION, dom_drift, dom_reorder, modal, session_expiry
 from harness.runner import run_task
 from tasks.registry import get
+
 
 CONDITIONS = {
     "no_injection": NO_INJECTION,
     "dom_drift": dom_drift(),
     "index_shift": dom_reorder(),
     "modal": modal(),
+    "session_expiry": session_expiry(),
 }
 
 

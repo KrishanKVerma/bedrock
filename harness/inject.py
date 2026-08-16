@@ -18,7 +18,7 @@ from typing import Callable, Literal
 
 from playwright.sync_api import Page
 
-InjectionKind = Literal["none", "dom_drift", "modal"]
+InjectionKind = Literal["none", "dom_drift", "index_shift", "modal", "session_expiry"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,3 +166,14 @@ def _modal(page: Page) -> str:
 
 def modal(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
     return Injection(kind="modal", apply=_modal, fire_when_url_contains=fire_when_url_contains, fire_when_url_excludes="/login")
+
+def _session_expire(page: Page) -> str:
+    """Clear cookies mid-run: the session dies but the page still looks logged in."""
+    page.context.clear_cookies()
+    return "cleared all cookies (session invalidated)"
+
+
+def session_expiry(fire_when_url_contains: str = "quotes.toscrape.com/") -> Injection:
+    return Injection(kind="session_expiry", apply=_session_expire,
+                     fire_when_url_contains=fire_when_url_contains,
+                     fire_when_url_excludes="/login")
