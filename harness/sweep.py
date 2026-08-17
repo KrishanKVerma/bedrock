@@ -83,6 +83,7 @@ def sweep_condition(condition: str, runs: int, task_id: str = "quotes_login_form
     mixed = len(set(providers)) > 1
 
     prov = providers[0] if providers else "unknown"
+    prov = prov.replace("/", "-").replace(":", "_")
     out = Path("docs/evidence") / f"sweep_{prov}_{condition}.json"
     if out.exists():
         prev = json.load(out.open()).get("completed", 0)

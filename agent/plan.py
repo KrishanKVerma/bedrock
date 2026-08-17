@@ -7,10 +7,15 @@ prose. Free-form output is how agents become unreliable — the parser breaks, o
 worse, it half-works and the agent does something nobody intended. A fixed schema
 means a bad plan fails loudly instead of quietly.
 
-Provider policy: Groq primary, OpenRouter fallback, both serving the SAME model
-(Llama 3.3 70B). A reliability study cannot afford two brains — runs served by
-different models would blend two agents into one number. Which provider served each
-call is recorded so any result can be checked for provider mixing.
+Provider policy: one model per measurement, never mixed. The provider AND the model
+string that served each call are recorded on every run, so any result can be checked
+after the fact. There is no automatic fallback: if the locked provider fails, the run
+fails loudly rather than quietly continuing on a different brain.
+
+The original instrument — Groq-served Llama-3.3-70B — was retired by the provider
+mid-study. That arm is closed at 85 baseline runs and cannot be extended. Everything
+measured on it stands; nothing can be added to it. This is the reason the model string
+is recorded per run and not just the provider name.
 """
 
 from __future__ import annotations
@@ -21,20 +26,20 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from dotenv import load_dotenv
-from groq import APIStatusError, Groq, RateLimitError
+from groq import Groq
 from openai import OpenAI
 
 from agent.perceive import PageState
 
 load_dotenv()
 
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "openai/gpt-oss-120b"
 OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct"
 CEREBRAS_MODEL = "gpt-oss-120b"
 GEMINI_MODEL = "gemini-3.5-flash"
 MISTRAL_MODEL = "mistral-small-latest"
 
-# Which provider served the most recent call. Recorded into run logs.
+# Which provider AND model served the most recent call. Recorded into run logs.
 last_provider: str = "none"
 
 ActionType = Literal["click", "type", "navigate", "done", "fail"]
@@ -126,7 +131,7 @@ def _ask_groq(user: str) -> str:
 def _ask_openrouter(user: str) -> str:
     key = os.getenv("OPENROUTER_API_KEY")
     if not key:
-        raise RuntimeError("Groq is rate-limited and OPENROUTER_API_KEY is not set.")
+        raise RuntimeError("OPENROUTER_API_KEY not set.")
     client = OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
     r = client.chat.completions.create(
         model=OPENROUTER_MODEL,
@@ -134,6 +139,7 @@ def _ask_openrouter(user: str) -> str:
         messages=[{"role": "system", "content": _SYSTEM}, {"role": "user", "content": user}],
     )
     return r.choices[0].message.content or ""
+
 
 def _ask_cerebras(user: str) -> str:
     key = os.getenv("CEREBRAS_API_KEY")
@@ -147,9 +153,15 @@ def _ask_cerebras(user: str) -> str:
     )
     return r.choices[0].message.content or ""
 
+
 def _ask_gemini(user: str) -> str:
+    import time
+
     from google import genai
     from google.genai import types
+
+    # Free-tier rate limit is low; space the calls out rather than halting a sweep.
+    time.sleep(6)
 
     key = os.getenv("GEMINI_API_KEY")
     if not key:
@@ -163,7 +175,8 @@ def _ask_gemini(user: str) -> str:
             temperature=0,
         ),
     )
-    return r.text
+    return r.text or ""
+
 
 def _ask_mistral(user: str) -> str:
     key = os.getenv("MISTRAL_API_KEY")
@@ -175,7 +188,17 @@ def _ask_mistral(user: str) -> str:
         temperature=0,
         messages=[{"role": "system", "content": _SYSTEM}, {"role": "user", "content": user}],
     )
-    return r.choices[0].message.content
+    return r.choices[0].message.content or ""
+
+
+_PROVIDERS = {
+    "groq": (_ask_groq, lambda: GROQ_MODEL),
+    "openrouter": (_ask_openrouter, lambda: OPENROUTER_MODEL),
+    "cerebras": (_ask_cerebras, lambda: CEREBRAS_MODEL),
+    "gemini": (_ask_gemini, lambda: GEMINI_MODEL),
+    "mistral": (_ask_mistral, lambda: MISTRAL_MODEL),
+}
+
 
 def plan(task: str, state: PageState, history: list[str] | None = None) -> Action:
     """Decide the next action for `task` given the current page.
@@ -195,28 +218,14 @@ def plan(task: str, state: PageState, history: list[str] | None = None) -> Actio
     )
 
     locked = os.getenv("BEDROCK_PROVIDER", "").lower()
+    if locked not in _PROVIDERS:
+        raise RuntimeError(
+            f"BEDROCK_PROVIDER must be one of {sorted(_PROVIDERS)}; got {locked!r}. "
+            "There is no default and no fallback: a measurement must name its model."
+        )
 
-    if locked == "groq":
-        raw = _ask_groq(user)
-        last_provider = "groq"
-    elif locked == "openrouter":
-        raw = _ask_openrouter(user)
-        last_provider = "openrouter"
-    elif locked == "cerebras":
-        raw = _ask_cerebras(user)
-        last_provider = "cerebras"    
-    elif locked == "gemini":
-        raw = _ask_gemini(user)
-        last_provider = "gemini"    
-    elif locked == "mistral":
-        raw = _ask_mistral(user)
-        last_provider = "mistral"    
-    else:
-        try:
-            raw = _ask_groq(user)
-            last_provider = "groq"
-        except (RateLimitError, APIStatusError):
-            raw = _ask_openrouter(user)
-            last_provider = "openrouter"
+    ask, model_of = _PROVIDERS[locked]
+    raw = ask(user)
+    last_provider = f"{locked}:{model_of()}"
 
     return _parse(raw)
