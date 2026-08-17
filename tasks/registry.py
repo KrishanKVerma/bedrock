@@ -135,6 +135,18 @@ TASKS: list[Task] = [
         expect=Expectation(text_contains="Logout", url_contains="secure"),
         max_steps=8,
     ),
+        Task(
+        id="element_count_tracking",
+        kind="form_fill",
+        instruction="Make sure there are exactly two elements on the page.",
+        start_url="https://the-internet.herokuapp.com/add_remove_elements/",
+        # State-tracking test. The page starts empty; each 'Add Element' click adds
+        # one Delete button. The agent must count its own actions and stop at two.
+        # Nothing is hidden and nothing is perturbed - the only difficulty is
+        # tracking a count across steps and checking it against the page.
+        expect=Expectation(custom=lambda url, text: text.count("Delete") == 2),
+        max_steps=10,
+    ),
 ]
 
 BY_ID = {t.id: t for t in TASKS}
