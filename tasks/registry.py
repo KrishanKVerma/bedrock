@@ -147,6 +147,30 @@ TASKS: list[Task] = [
         expect=Expectation(custom=lambda url, text: text.count("Delete") == 2),
         max_steps=10,
     ),
+        Task(
+        id="herokuapp_checkboxes",
+        kind="form_fill",
+        instruction="Check both checkboxes on the page.",
+        start_url="https://the-internet.herokuapp.com/checkboxes",
+        expect=Expectation(custom=lambda url, text: True),
+        max_steps=8,
+    ),
+    Task(
+        id="herokuapp_dropdown",
+        kind="form_fill",
+        instruction="Select 'Option 2' from the dropdown.",
+        start_url="https://the-internet.herokuapp.com/dropdown",
+        expect=Expectation(custom=lambda url, text: "Option 2" in text),
+        max_steps=8,
+    ),
+    Task(
+        id="herokuapp_dynamic_controls",
+        kind="form_fill",
+        instruction="Remove the checkbox, then enable the text input.",
+        start_url="https://the-internet.herokuapp.com/dynamic_controls",
+        expect=Expectation(text_contains="It's enabled!"),
+        max_steps=10,
+    ),
 ]
 
 BY_ID = {t.id: t for t in TASKS}
