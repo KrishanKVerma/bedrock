@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from harness.inject import NO_INJECTION, dom_drift, dom_reorder, modal, session_expiry
+from harness.inject import NO_INJECTION, dom_drift, dom_reorder, modal, session_expiry, prepopulate
 from harness.runner import run_task
 from tasks.registry import get
 
@@ -29,6 +29,7 @@ CONDITIONS = {
     "index_shift": dom_reorder(),
     "modal": modal(),
     "session_expiry": session_expiry(),
+    "prepopulate": prepopulate(),
 }
 
 

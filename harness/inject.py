@@ -177,3 +177,18 @@ def session_expiry(fire_when_url_contains: str = "quotes.toscrape.com/") -> Inje
     return Injection(kind="session_expiry", apply=_session_expire,
                      fire_when_url_contains=fire_when_url_contains,
                      fire_when_url_excludes="/login")
+
+def _prepopulate(page: Page) -> str:
+    n = page.evaluate(
+        """() => {
+            const btn = document.querySelector('button[onclick="addElement()"]');
+            for (let i = 0; i < 5; i++) btn.click();
+            return document.querySelectorAll('.added-manually').length;
+        }"""
+    )
+    return f"pre-populated {n} deletable elements"
+
+
+def prepopulate(fire_when_url_contains: str = "add_remove_elements") -> Injection:
+    return Injection(kind="prepopulate", apply=_prepopulate,
+                     fire_when_url_contains=fire_when_url_contains)
