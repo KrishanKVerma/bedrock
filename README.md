@@ -9,14 +9,15 @@ both, then measures the gap between what an agent reports and what actually happ
 
 ## The claim
 
-A browser agent completes its task, takes one more locally reasonable action that
-invalidates it, and reports success.
+**An agent's account of its own work is not evidence of what it did.** Across 160 runs on
+four tasks and two models, there was not one instance of an agent reporting that it could
+not do the job. Every failure was reported as a success.
 
-On a login task the agent enters credentials, submits, and succeeds. It then observes
-the "Logout" link — correct evidence that it succeeded — and clicks it, logging itself
-out. It reports success. Nothing errors. The only thing that catches it is an
-independent check against the real end state, defined before the run and never shown to
-the agent.
+The clearest case: a login task where the agent enters credentials, submits, succeeds —
+then observes the "Logout" link, correctly identifies it as evidence of success, and
+clicks it, logging itself out. It reports success. Nothing errors. The only thing that
+catches it is an independent check against real end state, defined before the run and
+never shown to the agent.
 
 The reasoning on that final step is *correct*:
 
@@ -28,150 +29,126 @@ The reasoning on that final step is *correct*:
 ```
 
 The agent identifies the right evidence and draws the right conclusion. Then it clicks
-the evidence away. This is not a perception failure or a capability failure. It is a
-**stop-condition failure**: a correct inference that terminates in an action instead of
-a stop.
+the evidence away. Not a perception failure and not a capability failure — a correct
+inference that terminates in an action instead of a stop.
 
 ---
 
 ## Results
 
-**Mechanism, verified by prediction (N=17).** Every silent failure took exactly one step
-past the terminal action and clicked the same element: 4 steps, ref[1]. Every passing run
-stopped *on* the terminal action: 3 steps, ref[4]. 17/17, with 0/36 in the contrast
-class — though that contrast is partly definitional, since a pass by construction ends at
-the step that creates success.
+**The mechanism is deterministic where the rate is not.** On the login task, 33/85 (39%)
+silent failures across 8 sessions, with the rate swinging 10%–67% between sessions at
+temperature 0. But across 112 instrumented runs there is **not one exception** to the
+signature: a pass takes exactly 3 steps and ends on ref[4]; a silent failure takes exactly
+4 and ends on ref[1]. A benchmark reporting only the rate would read a deterministic
+failure as noise.
 
-**Rate: 33/85 (39%) across 8 sessions, spread 10%–67%.** Same model, same task, same
-config, temperature 0. Per session: 4/10, 4/10, 3/13, 4/10, 1/10, 5/10, 8/12, 8/20.
+**Verified by prediction, not inspection (N=17).** Every silent failure had already
+reached the success state at the start of its final step, then clicked it away. 17/17.
+Step budget ruled out: raising `max_steps` 8→12 changed nothing — the agent never used
+more than 4 of 12.
 
-**The rate moves; the mechanism doesn't.** Across 112 instrumented runs there is not one
-exception to the 3-step/4-step, ref[4]/ref[1] split. A benchmark reporting only the rate
-would read a deterministic failure as noise.
+**One intervention removes it, and not by fixing anything.** Inserting three decoy links
+moves Logout from ref[1] to ref[4] and changes nothing else — same element, still visible,
+still labelled, still clickable. Rate goes to **0/26**. Verified by a probe with no model
+calls. Note what that means: the failure didn't go away, the target did. An agent that
+still doesn't know it's finished, but whose destructive control has moved, looks reliable
+until the page layout changes.
 
-**Step budget ruled out.** Raising `max_steps` from 8 to 12 changed nothing — the agent
-never used more than 4 of its 12 steps. It is not running until it hits a ceiling; it
-takes exactly one step past the terminal action and halts on its own.
+**Reliability is a property of the task/model pair, not the model.** Same harness, same
+config:
 
-**One intervention removes it.** Inserting three decoy links, which moves Logout from
-ref[1] to ref[4] and changes nothing else, takes the rate to 0/26. The element is still
-present, visible, labelled, and clickable. Only its position in an enumerated list
-changed. Verified by a direct probe with no model calls
-(`tests/probe_logout_ref.py`).
+| Task | Mistral Small | gpt-oss-120b |
+|---|---|---|
+| login | 0/20 | 0/20 |
+| element count | 18/20 | 20/20 |
+| dynamic controls | 20/20 | 19/20 |
+| delete to one | 12/20 | 2/20 |
 
-**Not universal across models.** Same task, same harness, same config:
+77/80 silent on the two tasks where both models fail. **Neither model dominates** —
+gpt-oss is worse on element count and dramatically better on delete-to-one. There is no
+ordering, only pairs. Which also means the login task, where this project's headline
+mechanism lives, is the *outlier*: it's the one task these models reliably pass.
 
-| Model | Silent failures |
-|---|---|
-| Llama-3.3-70B (Groq) | 33/85 (39%) |
-| Mistral Small | 0/20 |
-| gpt-oss-120b | 0/20 |
+**Two more failure classes, found by widening the task set.**
 
-Mistral, seeing the identical element list with Logout at the identical ref[1], reports:
-*"The page shows 'Logout' in the visible text, indicating successful login"* — and stops.
-The same observation, the opposite action. That contrast is what rules out positional
-bias as the cause: a low-ref pull would pull on both models.
+*Weak-evidence verification* — the agent checks its work against a signal that doesn't
+discriminate. Under session expiry it concludes success because "the page shows quotes,"
+which is true logged-in or logged-out. On an async task it reports an input enabled while
+the page still reads "Enabling…" — asserting a transition it never waited to observe.
 
-**But "reliable model" is not a thing.** On a second task — click a button until exactly
-two elements exist — the two models that score 0/20 on login score 18/20 and 20/20 silent.
-Zero honest failures across 40 runs on that task. Reliability is a property of the
-task/model pair, not the model.
+*State-tracking failure* — asked to leave exactly two elements on a page, the agent clicks
+Add seven times, each step reasoning "add another to verify there are exactly two," then
+claims exactly two are visible.
+
+**Modal is a barrier, not a fix.** With a blocking overlay, 0/20 silent — but 3 of those
+runs still *chose* the self-undo and the overlay intercepted the click. On one of them the
+agent then reported *failure* on a run that had succeeded. The self-report is decoupled
+from reality in both directions.
 
 ---
 
 ## Walk-backs
 
-Four claims retracted, publicly, with the data kept in the repo.
+Four claims retracted publicly, with the data kept in the repo.
 
 **1. A variance figure that belonged to the instrument.** Early sessions read 80%, 33%,
 30%, 50% and looked like dramatic non-determinism. The perception config had been tuned
-between runs — element count moved between 30 and 60, which re-indexed the list and moved
-the destructive element out of easy reach. The instability was mine, not the agent's.
-Retracted, config locked, re-measured.
+between runs, re-indexing the element list and moving the destructive element out of
+reach. The instability was mine.
 
-**2. A generalisation claim that failed its own test.** The mechanism was claimed to
-generalise. Two purpose-built analogs — a single-click task and a multi-step task with a
-page transition — both returned 0/10. It reproduced on one task only. The
-non-reproducibility is itself the argument for post-hoc checks: you cannot enumerate the
-failure modes in advance well enough to check for them specifically.
+**2. A generalisation claim that failed its own test.** Two purpose-built analogs — one
+single-click, one multi-step with a page transition — both returned 0/10. The mechanism
+reproduced on one task only. That non-reproducibility is itself the argument for post-hoc
+checks: you cannot write the check before you've seen the failure.
 
-**3. Injection results measured against the wrong page.** The injection trigger matched
-`quotes.toscrape.com/`, which also matches `quotes.toscrape.com/login`. Every injection
-fired on the login page and was spent before the agent reached the page the failure lives
-on. Two full conditions measured a perturbation that never arrived. Caught only because
-per-run evidence recorded which element was clicked.
+**3. Injection results measured against the wrong page.** The trigger matched
+`quotes.toscrape.com/`, which also matches `/login`. Every injection fired on the login
+page and was spent before the agent reached the page the failure lives on. Two full
+conditions measured a perturbation that never arrived.
 
 **4. The harness told the agent it had been tampered with.** After fixing (3), the runner
-still appended the injection's own description to the planner's prompt: *"[harness
-injected dom_drift: renamed class/id/data-test on 41 attributes]"*. So under every
+still appended the injection's own description to the planner's prompt. Under every
 injection the agent was warned, in plain English, on exactly the step where the failure
-would otherwise occur. Three conditions returned zero silent failures because of it. With
-the leak closed, one of them returned straight to baseline.
+would otherwise occur. Three conditions returned zero silent failures because of it.
 
-**The harness has caught five of its own measurement errors before any of them reached a
-claim.** The fifth: the original mechanism-verification script evaluated the
-success-signature only inside the silent-failure branch, so it could only ever print
-100%. A verification that cannot return a negative is not a verification.
+**The harness has caught five of its own measurement errors before any reached a claim.**
+The fifth: the original mechanism-verification script evaluated the success signature only
+inside the silent-failure branch, so it could only ever print 100%. *A verification that
+cannot return a negative is not a verification.*
 
-Every error made the numbers *more* interesting, not less. That is the pattern worth
-noticing.
+Every one of those errors made the numbers *more* interesting, not less.
 
 ---
 
 ## Built vs not built
 
-**Built.** An independent postcondition checker. It evaluates a criterion defined in
-advance against the real page state after the run, never shown to the agent, and never
-trusts the agent's own report. Replayable per-run traces recording the element clicked,
-step count, planner reasoning, and the model that served each call.
+**Built.** An independent postcondition checker — a criterion defined in advance,
+evaluated against real end state, never shown to the agent, never trusting its report.
+Replayable per-run traces recording the element clicked, step count, planner reasoning,
+and the provider *and model string* that served each call.
 
-**Not built.** Decision-time action scoring. Nothing in the loop enumerates the available
-actions and scores them for reversibility *before* the agent acts. Every failure here was
-diagnosed post hoc from traces. Knowing that silent failures take one step past success
-and click the same element does not mean anything in the loop notices that at the time.
+**Not built.** Decision-time action scoring. Nothing enumerates the available actions and
+scores them for reversibility *before* the agent acts. Every failure here was diagnosed
+post hoc from traces. Knowing that silent failures take one step past success and click
+the same element does not mean anything in the loop notices at the time.
 
-That gap is the obvious next thing to build, and the observed mechanism gives it a narrow
+That gap is the obvious next thing to build, and the measured mechanism gives it a narrow
 first target: flag actions that revert the postcondition the agent is working toward.
-
----
-
-## Status
-
-| Mode | Status |
-|---|---|
-| Silent failure | Measured — 33/85, mechanism verified N=17 |
-| Weak-oracle pass | Documented, one instance |
-| Non-determinism | Measured — 10%–67% across 8 sessions |
-| DOM selector drift | Measured — 9/20, and shown to be a **no-op** for this agent |
-| Modal interruption | Measured — 0/20, self-undo attempted 3 times and physically blocked |
-| Rate-limit cliff | Documented, hit repeatedly |
-| Login / session expiry | Measured on Mistral — 2/20 silent, 18/20 honest |
-| Element-count tracking | Measured — 18/20 (Mistral), 20/20 (gpt-oss) |
-| Rate-limit recovery | Not measured |
-| Irreversibility | Not measured |
-
-Two results worth reading closely. **DOM drift changes nothing the agent can see** — a
-probe confirms the perceived element list and page text are byte-identical before and
-after 41 attributes are renamed. It breaks agents that key on selectors; this one keys on
-text and position. **Modal blocks the consequence, not the decision** — in 3 of 20 runs
-the agent still chose to click Logout and the overlay intercepted the click. On one of
-those it then reported failure on a run that had actually succeeded. The self-report is
-decoupled from reality in both directions.
 
 ---
 
 ## The instrument was retired mid-study
 
 Groq removed `llama-3.3-70b-versatile` from its API while this project was running. Every
-headline number above was measured on it. **That arm is closed at 85 runs and cannot be
-extended.** The planned hardening phase — add a fix, measure before and after — is no
-longer possible, because no available model exhibits the failure to fix.
+number in the mechanism section was measured on it. **That arm is closed at 85 runs and
+cannot be extended**, and the planned hardening phase — add a fix, measure before and
+after — is no longer possible, because no available model exhibits the failure to fix.
 
-This is worth stating rather than hiding. A reliability study whose substrate was deleted
-by the provider mid-measurement is the sharpest available illustration of what this repo
-argues: agent reliability numbers are contingent on a moving base, and a benchmark
-published one month may be unreproducible the next. The archived traces remain in
-`docs/evidence/`.
+Stated rather than hidden, because it is the sharpest available illustration of what this
+repo argues: a reliability number measured on a provider-hosted model is contingent on
+something the provider can delete without notice, and a benchmark published one month may
+be unreproducible the next. Archived traces are in `docs/evidence/`.
 
 ---
 
@@ -182,11 +159,11 @@ Requires Python 3.11+ and a free Groq API key (console.groq.com).
 ```bash
 git clone https://github.com/KrishanKVerma/bedrock && cd bedrock
 python -m venv venv && source venv/bin/activate
-pip install -e . && playwright install chromium
+pip install -r requirements.txt && playwright install chromium
 echo "GROQ_API_KEY=your_key" > .env
 ```
 
-**Fastest path to the finding** — the element-count task, which reproduces today:
+**Fastest path to the finding** — reproduces today:
 
 ```bash
 BEDROCK_PROVIDER=groq python -m harness.sweep no_injection 20 element_count_tracking
@@ -195,29 +172,44 @@ BEDROCK_PROVIDER=groq python -m harness.sweep no_injection 20 element_count_trac
 Expect ~20/20 silent failures: the agent overshoots the target count and reports success
 anyway, every time, with no honest failures.
 
-**The login task**, which the archived model failed at 39% and current models pass:
+**The login task**, which the retired model failed at 39% and current models pass:
 
 ```bash
 BEDROCK_PROVIDER=groq python -m harness.sweep no_injection 20
 ```
 
 Expect 0/20. This is the honest state of things: **the harness reproduces, the headline
-rate does not.** The original traces are in `docs/evidence/` — see
-`mechanism_llama_selfundo.json` for the self-undo and `mechanism_mistral_stops.json` for
-the same observation producing the opposite action.
+rate does not.** For the original behaviour, read the archived traces —
+`docs/evidence/mechanism_llama_selfundo.json` for the self-undo, and
+`mechanism_mistral_stops.json` for the same observation producing the opposite action.
 
-Every sweep writes per-run evidence to `docs/evidence/`, including the model string that
-served it. A sweep halted by a rate limit saves what it completed; a sweep that completes
-zero runs writes nothing.
+The model is set by `GROQ_MODEL` in `agent/plan.py`; providers are selected with
+`BEDROCK_PROVIDER` (groq · mistral · gemini · openrouter · cerebras). There is no
+fallback — a measurement must name its model.
+
+Every sweep writes per-run evidence to `docs/evidence/`. A sweep halted by a rate limit
+saves what it completed; one that completes zero runs writes nothing.
+
+---
+
+## Voice
+
+```bash
+BEDROCK_PROVIDER=mistral python -m voice.listen
+```
+
+Speech selects from a fixed set of registered tasks and reports the agent's claim
+alongside the independent check. It never turns arbitrary speech into arbitrary browser
+actions — given what the rest of this repo demonstrates, narrowing what an agent can be
+asked to do is the defensible direction.
 
 ---
 
 ## Stack
 
-Python 3 · Playwright · single-model-per-measurement, provider and model recorded per run
-(Groq, Mistral, Gemini, OpenRouter, Cerebras wired). No agent framework — built directly
-on Playwright and an LLM so the failure modes are visible rather than buried under
-abstraction.
+Python 3 · Playwright · one model per measurement, provider and model recorded per run.
+No agent framework — built directly on Playwright and an LLM so the failure modes are
+visible rather than buried under abstraction.
 
 ---
 
@@ -225,23 +217,32 @@ abstraction.
 
 - [docs/failure-taxonomy.md](docs/failure-taxonomy.md) — every mode, every denominator,
   every retraction, in full
+- [docs/generality.md](docs/generality.md) — where the mechanism did and didn't reproduce
 - [docs/architecture.md](docs/architecture.md) — how the agent and harness fit together
-- [docs/generality.md](docs/generality.md) — where the mechanism did not reproduce
-- `docs/evidence/` — raw per-run data for every number on this page
+- `docs/evidence/` — raw per-run data for every number on this page. Authoritative.
+  `docs/sessions.json` covers early sessions only and is superseded by it.
 
 ---
 
-## Roadmap
+## Status
 
-- [x] Baseline agent (perceive → plan → act)
-- [x] Reliability harness + silent-failure detection
-- [x] Baseline measurement, mechanism verification
-- [x] Cross-model replication
-- [ ] Decision-time action scoring (reversibility at plan time)
-- [ ] Hands-free voice control (accessibility)
-- [ ] Remaining v2 modes — rate-limit recovery, irreversibility
-- [ ] ~~Hardening + before/after numbers~~ — blocked: no available model exhibits the
-      failure
+| | |
+|---|---|
+| Silent failure | Measured — 33/85, mechanism verified N=17 |
+| Weak-oracle pass | Documented, two instances |
+| Non-determinism | Measured — 10%–67% across 8 sessions |
+| DOM selector drift | Measured — 9/20, shown to be a **no-op** for this agent |
+| Modal interruption | Measured — 0/20, self-undo attempted 3× and blocked |
+| Rate-limit cliff | Documented |
+| Session expiry | Measured — 2/20 silent, 18/20 honest |
+| Weak-evidence verification | Measured — 20/20, 19/20 |
+| State-tracking failure | Measured — 18/20, 20/20, 12/20, 2/20 |
+| Cross-model replication | Done — 3 models |
+| Voice control | Built |
+| Irreversibility | **Not observed** — task surface didn't elicit it |
+| Rate-limit recovery | **Not measured** — needs retry logic the agent lacks |
+| Hardening before/after | **Not possible** — no live model exhibits the failure |
+| Decision-time action scoring | **Not built** — next |
 
 ---
 
