@@ -11,7 +11,7 @@ agent can catch it. Only an independent check against real state can.
 
 Every rate below names its model and its denominator. Models are never pooled. The
 original instrument, Groq-served Llama-3.3-70B, was retired by the provider mid-study;
-that arm is closed at 85 runs and cannot be extended. See "The instrument moved" below.
+that arm is closed at 89 runs and cannot be extended. See "The instrument moved" below.
 
 ---
 
@@ -31,9 +31,10 @@ data, not trusted as a result.
 **Does the agent's report reveal it?** **No.** This is the core case: the self-report and
 reality point in opposite directions.
 
-**Rate (login task, Llama-3.3-70B).** 33/85 runs (39%) at locked config, pooled across 8
-sessions. Per-session: 4/10, 4/10, 3/13, 4/10, 1/10, 5/10, 8/12, 8/20 - a spread from 10%
-to 67%. An earlier reading of this series as 40-60% came from the first four sessions and
+**Rate (login task, Llama-3.3-70B).** 34/89 runs (38%) at locked config, pooled across 8
+sessions. Per-session: 2/10, 4/10, 1/10, 5/10,
+6/10, 4/10, 4/9, 8/20 - a spread from 10%
+to 60%. An earlier reading of this series as 40-60% came from the first four sessions and
 now reads as a high draw rather than the centre.
 
 **Mechanism, verified by prediction (N=17).** Every silent failure took exactly one step
@@ -118,7 +119,7 @@ invalid - see errors 4 and 5 below.
 ### Index shift: three positions eliminates the failure
 
 **Result.** 0 silent failures in 26 runs across two sessions, against a Llama baseline of
-33/85 (39%). All passes took 3 steps ending on ref 4, identical to baseline.
+34/89 (38%). All passes took 3 steps ending on ref 4, identical to baseline.
 
 **What the injection actually does.** A direct probe with no model calls
 (`tests/probe_logout_ref.py`) dumps the element list after the injection fires. Three
@@ -185,8 +186,9 @@ this agent as safe.
 and - more strongly - across sessions.
 
 **How it manifests.** At locked config on Llama, per-session counts across eight sessions:
-4/10, 4/10, 3/13, 4/10, 1/10, 5/10, 8/12, 8/20 - a spread from 10% to 67% around a pooled
-39%. Temperature is 0; this is not sampling temperature, and the spread widened rather
+2/10, 4/10, 1/10, 5/10,
+6/10, 4/10, 4/9, 8/20 - a spread from 10% to 60% around a pooled
+38%. Temperature is 0; this is not sampling temperature, and the spread widened rather
 than converged as runs accumulated.
 
 **Does the agent's report reveal it?** **No.** Each run reports a confident outcome. The
@@ -346,7 +348,7 @@ turned out to be the intervention.
 
 **Model retirement (not caught, not catchable).** Groq removed
 `llama-3.3-70b-versatile` from its API partway through this work. Every headline number in
-section 1 was measured on it. That arm is closed at 85 runs and cannot be extended. The
+section 1 was measured on it. That arm is closed at 89 runs and cannot be extended. The
 planned hardening phase - add post-action verification, measure before and after - is no
 longer possible, because no available model exhibits the failure to fix.
 
@@ -396,7 +398,7 @@ injection condition the agent was told, in plain English, that the page had just
 modified - on exactly the step where the silent failure would otherwise occur. Three
 conditions returned zero silent failures. The tell was arithmetic: two of those conditions
 were shown by probe to change nothing the planner could see, yet 31 runs under them
-produced no failures against a 39% baseline, which chance does not explain. Fixed by
+produced no failures against a 38% baseline, which chance does not explain. Fixed by
 recording the detail on the run log instead of in history. With the leak closed, dom_drift
 returned 9/20 - baseline.
 
@@ -409,7 +411,7 @@ announced itself in a summary statistic. All were visible only in raw traces, co
 history, and test code.
 
 **A near-miss that was not an error.** After the trigger fix, two conditions in a row
-returned zero silent failures against a baseline that had been running 8/12. That could
+returned zero silent failures against a baseline that had been running 8 silent in 12. That could
 have been written up as two independent protective interventions. Instead a no-injection
 control was run first: 8/20, confirming the phenomenon still reproduced and nothing had
 shifted system-wide. Only then were the conditions examined individually - which is what
