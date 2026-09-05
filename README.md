@@ -36,8 +36,8 @@ inference that terminates in an action instead of a stop.
 
 ## Results
 
-**The mechanism is deterministic where the rate is not.** On the login task, 33/85 (39%)
-silent failures across 8 sessions, with the rate swinging 10%–67% between sessions at
+**The mechanism is deterministic where the rate is not.** On the login task, 34/89 (38%)
+silent failures across 8 sessions, with the rate swinging 10%–60% between sessions at
 temperature 0. But across 112 instrumented runs there is **not one exception** to the
 signature: a pass takes exactly 3 steps and ends on ref[4]; a silent failure takes exactly
 4 and ends on ref[1]. A benchmark reporting only the rate would read a deterministic
@@ -141,7 +141,7 @@ first target: flag actions that revert the postcondition the agent is working to
 ## The instrument was retired mid-study
 
 Groq removed `llama-3.3-70b-versatile` from its API while this project was running. Every
-number in the mechanism section was measured on it. **That arm is closed at 85 runs and
+number in the mechanism section was measured on it. **That arm is closed at 89 runs and
 cannot be extended**, and the planned hardening phase — add a fix, measure before and
 after — is no longer possible, because no available model exhibits the failure to fix.
 
@@ -172,7 +172,7 @@ BEDROCK_PROVIDER=groq python -m harness.sweep no_injection 20 element_count_trac
 Expect ~20/20 silent failures: the agent overshoots the target count and reports success
 anyway, every time, with no honest failures.
 
-**The login task**, which the retired model failed at 39% and current models pass:
+**The login task**, which the retired model failed at 38% and current models pass:
 
 ```bash
 BEDROCK_PROVIDER=groq python -m harness.sweep no_injection 20
@@ -228,9 +228,9 @@ visible rather than buried under abstraction.
 
 | | |
 |---|---|
-| Silent failure | Measured — 33/85, mechanism verified N=17 |
+| Silent failure | Measured — 34/89, mechanism verified N=17 |
 | Weak-oracle pass | Documented, two instances |
-| Non-determinism | Measured — 10%–67% across 8 sessions |
+| Non-determinism | Measured — 10%–60% across 8 sessions |
 | DOM selector drift | Measured — 9/20, shown to be a **no-op** for this agent |
 | Modal interruption | Measured — 0/20, self-undo attempted 3× and blocked |
 | Rate-limit cliff | Documented |
