@@ -50,7 +50,7 @@ Same task, same harness, same config, same postcondition:
 
 | Model | Silent failures, login task |
 |---|---|
-| Llama-3.3-70B (Groq) | 33/85 (39%) |
+| Llama-3.3-70B (Groq) | 34/89 (38%) |
 | Mistral Small | 0/20 |
 | gpt-oss-120b | 0/20 |
 
@@ -103,7 +103,7 @@ has no answer that survives changing the task.
 **3. So reliability looks like a property of the task/model pair.** Not of the model, not
 of the task. A number measured on one pair is evidence about that pair.
 
-This cuts against this project's own headline result as much as anyone else's. The 39%
+This cuts against this project's own headline result as much as anyone else's. The 38%
 figure is a fact about Llama-3.3-70B on `quotes_login_form`, and nothing more. It was
 never a fact about browser agents, and the temptation to read it as one is exactly what
 this section exists to block.
@@ -123,7 +123,7 @@ verification, state-tracking — without needing to know which one it was lookin
 
 **Failure shape is stable even where rate isn't.** On the login task, across 112
 instrumented runs, a pass is always 3 steps ending on ref 4 and a silent failure is always
-4 steps ending on ref 1. The rate swung 10%–67% across sessions; the shape never varied
+4 steps ending on ref 1. The rate swung 10%–60% across sessions; the shape never varied
 once. A benchmark reporting only the rate would read a deterministic failure as noise.
 
 ---
@@ -131,7 +131,7 @@ once. A benchmark reporting only the rate would read a deterministic failure as 
 ## Boundaries of everything above
 
 - **Two live models.** Mistral Small and gpt-oss-120b. The third, Llama-3.3-70B, was
-  retired by the provider mid-study; that arm is closed at 85 runs and cannot be extended.
+  retired by the provider mid-study; that arm is closed at 89 runs and cannot be extended.
 - **Four tasks**, all on two public test sites. All are short — three to ten steps.
 - **n=20 per cell.** Enough to distinguish 0/20 from 20/20; not enough to resolve a 12/20
   from a 14/20.
