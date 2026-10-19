@@ -9,9 +9,10 @@ That last column is the thesis. Where the answer is "no," the agent's self-repor
 worse than useless - it is confidently wrong - and no oversight method that trusts the
 agent can catch it. Only an independent check against real state can.
 
-Every rate below names its model and its denominator. Models are never pooled. The
-original instrument, Groq-served Llama-3.3-70B, was retired by the provider mid-study;
-that arm is closed at 89 runs and cannot be extended. See "The instrument moved" below.
+Every rate below names its model and its denominator, and every headline rate carries an
+interval. Models are never pooled. The original instrument, Groq-served Llama-3.3-70B,
+was retired by the provider mid-study; that arm is closed at 89 runs and cannot be
+extended. See "The instrument moved" below.
 
 ---
 
@@ -31,11 +32,18 @@ data, not trusted as a result.
 **Does the agent's report reveal it?** **No.** This is the core case: the self-report and
 reality point in opposite directions.
 
-**Rate (login task, Llama-3.3-70B).** 34/89 runs (38%) at locked config, pooled across 8
-sessions. Per-session: 2/10, 4/10, 1/10, 5/10,
-6/10, 4/10, 4/9, 8/20 - a spread from 10%
-to 60%. An earlier reading of this series as 40-60% came from the first four sessions and
-now reads as a high draw rather than the centre.
+**Rate (login task, Llama-3.3-70B).** 34/89 runs (38%, 95% Wilson interval 28.8-48.6%)
+at locked config (Groq Llama-3.3-70B, 1500 chars, 60 elements, max_steps=8), pooled
+across 8 sessions. Per-session: 2/10, 4/10, 1/10, 5/10, 6/10, 4/10, 4/9, 8/20. The
+10%-60% spread across those sessions is within binomial noise at these session sizes and
+does not support a between-session effect - see section 4. An earlier reading of this
+same series as 40-60% came from the first four sessions and now reads as a high draw
+rather than the centre; that was a guess when I wrote it and now has a test behind it.
+Earlier unlocked observations (up to 80%) are excluded as perception-config artifacts -
+see "The instrument moved" below. Evidence:
+`docs/evidence/mechanism_runs_maxsteps8.json`,
+`docs/evidence/mechanism_runs_maxsteps12.json`,
+`docs/evidence/sweep_groq_no_injection.json`.
 
 **Mechanism, verified by prediction (N=17).** Every silent failure took exactly one step
 beyond the terminal action: the page already showed "Logout" at the start of the final
@@ -61,8 +69,9 @@ post-logout page: it never notices the state changed underneath it. This is not 
 about the page. It is a correct inference that terminates in an action instead of a stop.
 
 **Cross-model contrast: the same sentence, the opposite action.** Mistral Small on the
-identical task, harness, and config produced 0 silent failures in 20 runs. Its passes take
-the same route - 3 steps, ending on click[4] - and its stopping reason
+identical task, harness, and config produced 0 silent failures in 20 runs (95%
+Clopper-Pearson interval 0-16.8%; see the note on zero cells in `docs/generality.md`).
+Its passes take the same route - 3 steps, ending on click[4] - and its stopping reason
 (`docs/evidence/mechanism_mistral_stops.json`) is:
 
 > The page shows 'Logout' in the visible text, indicating successful login.
@@ -118,8 +127,12 @@ invalid - see errors 4 and 5 below.
 
 ### Index shift: three positions eliminates the failure
 
-**Result.** 0 silent failures in 26 runs across two sessions, against a Llama baseline of
-34/89 (38%). All passes took 3 steps ending on ref 4, identical to baseline.
+**Result.** 0 silent failures in 26 runs across two sessions (95% Clopper-Pearson
+interval 0-13.2%), against a Llama baseline of 34/89 (38%, 28.8-48.6%). All passes took
+3 steps ending on ref 4, identical to baseline. Note what 0/26 does and does not say: it
+does not say the rate is zero, only that the data are consistent with a true rate up to
+about 13%. The intervals do not overlap, so the effect is real at this evidence level;
+the magnitude is not pinned down.
 
 **What the injection actually does.** A direct probe with no model calls
 (`tests/probe_logout_ref.py`) dumps the element list after the injection fires. Three
@@ -180,30 +193,65 @@ this agent as safe.
 
 ---
 
-## 4. Non-determinism
+## 4. Run-to-run variation
 
-**What it is.** Same agent, same task, same configuration, different outcomes across runs
-and - more strongly - across sessions.
+**What it is.** Same agent, same task, same configuration, different outcomes across runs.
 
-**How it manifests.** At locked config on Llama, per-session counts across eight sessions:
-2/10, 4/10, 1/10, 5/10,
-6/10, 4/10, 4/9, 8/20 - a spread from 10% to 60% around a pooled
-38%. Temperature is 0; this is not sampling temperature, and the spread widened rather
-than converged as runs accumulated.
+**How it manifests.** At locked config on Llama the pooled rate is 34/89 (38%,
+28.8-48.6%), with per-session counts of 2/10, 4/10, 1/10, 5/10, 6/10, 4/10, 4/9, 8/20.
+Temperature is 0, so this is not sampling temperature. Run-level variation is real: the
+rate is neither 0 nor 1 and no run is predictable in advance.
 
 **Does the agent's report reveal it?** **No.** Each run reports a confident outcome. The
-instability is only visible in aggregate.
+variation is only visible in aggregate.
 
 **Why it matters.** A benchmark reporting a single figure is reporting one sample from a
 wide distribution. This project made that error itself: three early sessions read 60%,
 60%, 50% and were nearly published as a stable ~55%.
 
-**What is stable underneath it.** The *rate* moves; the *shape* does not. Across 112
-instrumented runs on the login task there is not one exception: a pass takes exactly 3
-steps and ends on ref 4, a silent failure takes exactly 4 and ends on ref 1. Whatever
-varies between sessions determines how often the agent takes the extra step, not what the
-extra step is. A benchmark reporting only the rate would read a deterministic failure as
-noise.
+### Retraction: the between-session variation does not survive a test
+
+An earlier version of this section presented session-to-session rate variation at locked
+config as instability in its own right - a finding about the agent rather than a property
+of small samples. I then tested it, and it failed.
+
+A chi-square test of homogeneity across the eight sessions gives chi2 = 7.578, dof = 7,
+p = 0.371. There is no detectable between-session effect; the eight sessions are
+consistent with a single common rate. I should have run this before writing the variation
+up as a result.
+
+The spread looked large because at roughly ten runs per session with p = 0.38, the
+binomial standard deviation of a session rate is 0.147. Simulating at the actual session
+sizes, P(range >= 0.50) = 0.263 and P(SD >= observed) = 0.336. A range that wide turns up
+about a quarter of the time from sampling alone, with nothing varying between sessions.
+
+**The sentence I retract:** "the spread widened rather than converged as runs
+accumulated." That was reading a trend into noise. At n = 10 per session there is nothing
+to converge - each session estimate carries the same large standard error however many
+sessions precede it. What does converge is the pooled estimate, as 1/sqrt(N), which is why
+the pooled interval is the figure to report rather than the sequence of session rates.
+
+**Robustness.** A cluster bootstrap resampling whole sessions gives 27.85-47.19, against
+Wilson on the pooled figure at 28.79-48.59. The interval does not widen once clustering is
+accounted for. I report this as a check that passed, not as evidence of reduced
+uncertainty: at k = 8 a percentile cluster bootstrap is unstable and can under-cover, so
+its being narrower means little on its own.
+
+**The quantities.** ICC = 0.008. Design effect = 1.083. Effective n ~ 82, not 8. The
+session structure costs almost nothing in precision, which is what you would expect if
+sessions do not differ.
+
+**The limit.** Eight clusters gives low power. This is *no detectable* between-session
+effect, not no between-session effect. A real effect too small for this design to see
+would look exactly like what I observed, and I cannot rule one out.
+
+**What is stable underneath the run-to-run variation.** The *rate* moves; the *shape* does
+not. Across 81 unperturbed instrumented runs on the login task there is not one exception:
+a pass takes exactly 3 steps and ends on ref 4, a silent failure takes exactly 4 and ends
+on ref 1. (An earlier figure of 112 was a running tally that did not match the evidence
+files; 81 is the count derived from `docs/evidence/`. See error 7 below.) Whatever varies
+between runs determines how often the agent takes the extra step, not what the extra step
+is. A benchmark reporting only the rate would read a deterministic failure as noise.
 
 ---
 
@@ -314,6 +362,9 @@ The same two models, the same harness, the same config, four tasks:
 **77/80 silent on the two tasks where both models fail.** Zero honest failures on any of
 them.
 
+A zero cell here means 0-16.8% (95% Clopper-Pearson), not zero. See `docs/generality.md`
+for the interval treatment of the cross-model login comparison.
+
 Three things follow.
 
 **The login task is the outlier, not the archetype.** The mechanism this project spent
@@ -361,11 +412,12 @@ in `docs/evidence/`.
 
 ---
 
-## Methodology: five errors the harness caught on itself
+## Methodology: seven errors the harness caught on itself
 
-Every measurement error in this project was found before it reached a claim. Recording
-them is not throat-clearing - a measurement apparatus that has never caught itself being
-wrong has not been tested.
+Five of these were found before they reached a claim. Two were not - errors 6 and 7 were
+published first and retracted after. Recording them is not throat-clearing: a measurement
+apparatus that has never caught itself being wrong has not been tested, and an apparatus
+that has only ever caught itself in private has not been tested in public.
 
 **1. Injection fired at a step the agent never reached.** Injections were triggered by
 step number. The agent finishes the login task in three steps about half the time, so the
@@ -402,21 +454,46 @@ produced no failures against a 38% baseline, which chance does not explain. Fixe
 recording the detail on the run log instead of in history. With the leak closed, dom_drift
 returned 9/20 - baseline.
 
-**The pattern in all five: the error made the numbers *more* interesting, not less.** A
-non-firing injection produced conditions that looked protective; a drifting config
+**6. Between-session variation was claimed without a test (retracted after publication).**
+Section 4 previously presented the 10-60% per-session spread as instability in its own
+right. A chi-square test of homogeneity gives p = 0.371 and the spread occurs about a
+quarter of the time under pure independent sampling at these session sizes. The claim does
+not survive. Unlike errors 1-5 this one was published before it was checked, which is the
+more serious category: the apparatus did not catch it, a later test did. Full retraction in
+section 4.
+
+**7. A headline count was a conversational tally, not a file-derived number (retracted
+after publication).** The unperturbed instrumented-run count supporting the step/ref
+signature was carried as 112. That figure was a running total kept in notes and never
+checked against disk. Recomputing from `docs/evidence/` - summing the `no_injection` and
+`mech` rows on the login task, 13+54 passes at 3 steps ending ref 4 and 6+8 silent at 4
+steps ending ref 1 - gives 81. The published write-up already stated 81; this document and
+the README carried 112. This is the same failure mode as an earlier 33/85 error and
+resolves the same way: **the files win over the tally.**
+
+**The pattern in the first five: the error made the numbers *more* interesting, not less.**
+A non-firing injection produced conditions that looked protective; a drifting config
 produced dramatic variance; an unfalsifiable check produced a perfect score; a mistargeted
 injection produced a clean difference between conditions that were in fact identical; a
 leaked warning produced three apparent interventions from one accident. None would have
 announced itself in a summary statistic. All were visible only in raw traces, config
 history, and test code.
 
+**Errors 6 and 7 share a different pattern, and a worse one.** Both were claims that felt
+established because they had been repeated, not because they had been checked - one a
+phenomenon asserted from a visual spread, the other a number carried forward from
+conversation. Neither raw traces nor test code would have caught them. What caught them
+was running a test that could have come out the other way, and recomputing a number from
+the files instead of from memory. The project's own thesis applies to the project: an
+account of what happened is not evidence of what happened, and that includes mine.
+
 **A near-miss that was not an error.** After the trigger fix, two conditions in a row
-returned zero silent failures against a baseline that had been running 8 silent in 12. That could
-have been written up as two independent protective interventions. Instead a no-injection
-control was run first: 8/20, confirming the phenomenon still reproduced and nothing had
-shifted system-wide. Only then were the conditions examined individually - which is what
-surfaced error 5. The control cost 20 runs and was the difference between one real finding
-and three claimed ones.
+returned zero silent failures against a baseline that had been running 8 silent in 12. That
+could have been written up as two independent protective interventions. Instead a
+no-injection control was run first: 8/20, confirming the phenomenon still reproduced and
+nothing had shifted system-wide. Only then were the conditions examined individually -
+which is what surfaced error 5. The control cost 20 runs and was the difference between one
+real finding and three claimed ones.
 
 **One accidental result worth keeping.** Before error 5 was fixed, the leak was an
 unintended experiment: a generic warning that the page had changed - naming no risk, not
@@ -433,15 +510,15 @@ reported as a finding, but it is the most interesting thing the bug produced.
 |---|---|
 | Silent failure | No |
 | Weak-oracle pass | No |
-| Non-determinism | No |
+| Run-to-run variation | No |
 | Weak-evidence verification | No |
 | State-tracking failure | No |
 | Rate-limit cliff | Yes |
 
 Perturbation conditions are interventions rather than failures and sit outside this table:
-index shift removes the silent failure (0/26, mechanism verified by probe); DOM drift is a
-no-op for this perception layer and returns baseline (9/20); modal blocks the consequence
-while the decision still occurs (0/20, self-undo attempted 3 times).
+index shift removes the silent failure (0/26, 0-13.2%, mechanism verified by probe); DOM
+drift is a no-op for this perception layer and returns baseline (9/20); modal blocks the
+consequence while the decision still occurs (0/20, self-undo attempted 3 times).
 
 Every dangerous failure is invisible in the agent's own account of itself. The only one
 the agent reliably reports is the one that was never subtle. Across 80 runs on the two
