@@ -36,12 +36,15 @@ inference that terminates in an action instead of a stop.
 
 ## Results
 
-**The mechanism is deterministic where the rate is not.** On the login task, 34/89 (38%)
-silent failures across 8 sessions, with the rate swinging 10%–60% between sessions at
-temperature 0. But across 112 instrumented runs there is **not one exception** to the
-signature: a pass takes exactly 3 steps and ends on ref[4]; a silent failure takes exactly
-4 and ends on ref[1]. A benchmark reporting only the rate would read a deterministic
-failure as noise.
+**The mechanism is deterministic where the rate is not.** On the login task, 34/89 (38%,
+95% Wilson 28.8–48.6%) silent failures across 8 sessions — a rate that is noisy at any n
+I can achieve, while the signature underneath it is not. Across 81 unperturbed
+instrumented runs there is **not one exception**: a pass takes exactly 3 steps and ends
+on ref[4]; a silent failure takes exactly 4 and ends on ref[1]. (An earlier figure of 112
+was a running tally that did not match the evidence files; 81 is the count derived from
+`docs/evidence/`.) A benchmark reporting only the rate would read a deterministic failure
+as noise. The per-session spread is within binomial noise at these session sizes; the
+homogeneity test is in [docs/failure-taxonomy.md](docs/failure-taxonomy.md).
 
 **Verified by prediction, not inspection (N=17).** Every silent failure had already
 reached the success state at the start of its final step, then clicked it away. 17/17.
@@ -50,10 +53,12 @@ more than 4 of 12.
 
 **One intervention removes it, and not by fixing anything.** Inserting three decoy links
 moves Logout from ref[1] to ref[4] and changes nothing else — same element, still visible,
-still labelled, still clickable. Rate goes to **0/26**. Verified by a probe with no model
-calls. Note what that means: the failure didn't go away, the target did. An agent that
-still doesn't know it's finished, but whose destructive control has moved, looks reliable
-until the page layout changes.
+still labelled, still clickable. Rate goes to **0/26** (95% Clopper-Pearson 0–13.2%;
+Fisher exact against baseline p < 0.0001). Verified by a probe with no model calls. Note
+what that means: the failure didn't go away, the target did. An agent that still doesn't
+know it's finished, but whose destructive control has moved, looks reliable until the page
+layout changes. And note what 0/26 does not mean: not that the rate is zero, only that the
+data are consistent with a true rate up to about 13%.
 
 **Reliability is a property of the task/model pair, not the model.** Same harness, same
 config:
@@ -65,10 +70,16 @@ config:
 | dynamic controls | 20/20 | 19/20 |
 | delete to one | 12/20 | 2/20 |
 
+Each cell is n=20. A zero cell bounds at 0–16.8%, not zero; a 20/20 cell at 83.2–100%;
+mid-range cells carry intervals roughly ±20 points wide. Intervals and tests per cell are
+in [docs/generality.md](docs/generality.md).
+
 77/80 silent on the two tasks where both models fail. **Neither model dominates** —
-gpt-oss is worse on element count and dramatically better on delete-to-one. There is no
-ordering, only pairs. Which also means the login task, where this project's headline
-mechanism lives, is the *outlier*: it's the one task these models reliably pass.
+gpt-oss is dramatically better on delete-to-one (2/20 vs 12/20, Fisher exact p = 0.002).
+It also scores 20/20 against Mistral's 18/20 on element count, but at n=20 that is no
+difference at all (p = 0.49) and the non-ordering claim rests on delete-to-one alone.
+Which also means the login task, where this project's headline mechanism lives, is the
+*outlier*: it's the one task these models reliably pass.
 
 **Two more failure classes, found by widening the task set.**
 
@@ -90,7 +101,7 @@ from reality in both directions.
 
 ## Walk-backs
 
-Four claims retracted publicly, with the data kept in the repo.
+Six claims retracted publicly, with the data kept in the repo.
 
 **1. A variance figure that belonged to the instrument.** Early sessions read 80%, 33%,
 30%, 50% and looked like dramatic non-determinism. The perception config had been tuned
@@ -112,12 +123,32 @@ still appended the injection's own description to the planner's prompt. Under ev
 injection the agent was warned, in plain English, on exactly the step where the failure
 would otherwise occur. Three conditions returned zero silent failures because of it.
 
-**The harness has caught five of its own measurement errors before any reached a claim.**
-The fifth: the original mechanism-verification script evaluated the success signature only
-inside the silent-failure branch, so it could only ever print 100%. *A verification that
-cannot return a negative is not a verification.*
+**5. Between-session variation claimed without a test.** The 10%–60% per-session spread
+was presented as instability in its own right. A chi-square test of homogeneity gives
+p = 0.371, and a spread that wide occurs about a quarter of the time under pure
+independent sampling at these session sizes. ICC 0.008; effective n ≈ 82, not 8. The
+run-to-run variation is real; the between-session claim is not. Full retraction in
+[docs/failure-taxonomy.md](docs/failure-taxonomy.md).
 
-Every one of those errors made the numbers *more* interesting, not less.
+**6. A headline count that was a conversational tally, not a file-derived number.** The
+unperturbed instrumented-run count supporting the step/ref signature was carried as 112.
+That figure was a running total kept in notes and never checked against disk. Recomputed
+from `docs/evidence/` it is 81. The published write-up already said 81; this README and
+the taxonomy carried 112. Same failure mode as an earlier 33/85 error, and it resolves the
+same way: **the files win over the tally.**
+
+**The harness has caught seven of its own measurement errors.** Five were found before
+they reached a claim; walk-backs 5 and 6 were published first and retracted after, which
+is the more serious category. The fifth of the early five: the original
+mechanism-verification script evaluated the success signature only inside the
+silent-failure branch, so it could only ever print 100%. *A verification that cannot
+return a negative is not a verification.*
+
+Every one of the first five errors made the numbers *more* interesting, not less. The last
+two shared a different and worse pattern: claims that felt established because they had
+been repeated rather than because they had been checked. The project's own thesis applies
+to the project — an account of what happened is not evidence of what happened, and that
+includes mine.
 
 ---
 
@@ -217,7 +248,8 @@ visible rather than buried under abstraction.
 
 - [docs/failure-taxonomy.md](docs/failure-taxonomy.md) — every mode, every denominator,
   every retraction, in full
-- [docs/generality.md](docs/generality.md) — where the mechanism did and didn't reproduce
+- [docs/generality.md](docs/generality.md) — where the mechanism did and didn't reproduce,
+  with intervals and tests per cell
 - [docs/architecture.md](docs/architecture.md) — how the agent and harness fit together
 - `docs/evidence/` — raw per-run data for every number on this page. Authoritative.
   `docs/sessions.json` covers early sessions only and is superseded by it.
@@ -228,9 +260,9 @@ visible rather than buried under abstraction.
 
 | | |
 |---|---|
-| Silent failure | Measured — 34/89, mechanism verified N=17 |
+| Silent failure | Measured — 34/89 (28.8–48.6%), mechanism verified N=17 |
 | Weak-oracle pass | Documented, two instances |
-| Non-determinism | Measured — 10%–60% across 8 sessions |
+| Run-to-run variation | Measured — pooled 38%, wide interval; **no detectable between-session effect** (p = 0.371) |
 | DOM selector drift | Measured — 9/20, shown to be a **no-op** for this agent |
 | Modal interruption | Measured — 0/20, self-undo attempted 3× and blocked |
 | Rate-limit cliff | Documented |
